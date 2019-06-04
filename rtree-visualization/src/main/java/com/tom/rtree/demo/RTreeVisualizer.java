@@ -70,12 +70,6 @@ public class RTreeVisualizer extends JPanel {
               g2d.setColor(entry.getValue());
               g2d.draw(entry.getKey());
             }
-            //            Collection<Shape> grid = rTree.getGrid();
-            //            log.info("grid size is {}", grid.size());
-            //            for (Shape r : grid) {
-            //              System.err.println("r hashCode is " + r.hashCode());
-            //              g2d.draw(r);
-            //            }
           }
         };
     JButton addLots = new JButton("Add Many");
@@ -196,7 +190,7 @@ public class RTreeVisualizer extends JPanel {
     if (node instanceof InnerNode) {
       checkBounds((InnerNode) node);
     } else if (node instanceof LeafNode) {
-      log.info("leafNode: {}", node);
+      log.trace("leafNode: {}", node);
     }
   }
 

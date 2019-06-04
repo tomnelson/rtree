@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -105,6 +106,8 @@ public class RTree<T> {
     if (!root.isPresent()) return;
     // find all nodes that have leaf children
     List<LeafNode> leafNodes = collectLeafNodes(root.get(), new ArrayList<>());
+    // are there dupes?
+    Set<LeafNode> leafNodeSet = new HashSet<>(leafNodes);
     // for each leaf node, sort the children max to min, according to how far they are from the center
     List<Map.Entry<T, Rectangle2D>> goners = new ArrayList<>();
 
@@ -119,25 +122,25 @@ public class RTree<T> {
         for (Map.Entry<T, Rectangle2D> entry : nodeMap.entrySet()) {
           entryList.add(entry); // will be sorted at the end
         }
-        for (Map.Entry<T, Rectangle2D> entry : entryList) {
-          Point2D centerOfEntry =
-              new Point2D.Double(entry.getValue().getCenterX(), entry.getValue().getCenterY());
-          System.err.println(
-              "presort: entry "
-                  + entry
-                  + " distance is "
-                  + centerOfEntry.distance(centerOfLeafNode));
-        }
+        //        for (Map.Entry<T, Rectangle2D> entry : entryList) {
+        //          Point2D centerOfEntry =
+        //              new Point2D.Double(entry.getValue().getCenterX(), entry.getValue().getCenterY());
+        //          System.err.println(
+        //              "presort: entry "
+        //                  + entry
+        //                  + " distance is "
+        //                  + centerOfEntry.distance(centerOfLeafNode));
+        //        }
         entryList.sort(new DistanceComparator(centerOfLeafNode));
-        for (Map.Entry<T, Rectangle2D> entry : entryList) {
-          Point2D centerOfEntry =
-              new Point2D.Double(entry.getValue().getCenterX(), entry.getValue().getCenterY());
-          System.err.println(
-              "sorted: entry "
-                  + entry
-                  + " distance is "
-                  + centerOfEntry.distance(centerOfLeafNode));
-        }
+        //        for (Map.Entry<T, Rectangle2D> entry : entryList) {
+        //          Point2D centerOfEntry =
+        //              new Point2D.Double(entry.getValue().getCenterX(), entry.getValue().getCenterY());
+        //          System.err.println(
+        //              "sorted: entry "
+        //                  + entry
+        //                  + " distance is "
+        //                  + centerOfEntry.distance(centerOfLeafNode));
+        //        }
 
         // now take 30% from the beginning of the sortedList, remove them all from the tree, then re-insert them all
 
@@ -147,10 +150,10 @@ public class RTree<T> {
           Map.Entry<T, Rectangle2D> entry = entryList.get(i);
           goners.add(entry);
         }
-        for (Map.Entry<T, Rectangle2D> goner : goners) {
-          remove(goner.getKey());
-        }
       }
+    }
+    for (Map.Entry<T, Rectangle2D> goner : goners) {
+      remove(goner.getKey());
     }
     for (Map.Entry<T, Rectangle2D> goner : goners) {
       add(splitterContext, goner.getKey(), goner.getValue());
@@ -158,7 +161,6 @@ public class RTree<T> {
   }
 
   class DistanceComparator implements Comparator<Map.Entry<T, Rectangle2D>> {
-
     Point2D center;
 
     public DistanceComparator(Point2D center) {
@@ -202,7 +204,7 @@ public class RTree<T> {
    * @return
    */
   public RTree<T> remove(T element) {
-    log.trace("want to remove {} from tree of size {}", element, count());
+    log.trace("want to remove {} from tree {}", element, this);
     if (!root.isPresent()) {
       // this tree is empty
       return new RTree();

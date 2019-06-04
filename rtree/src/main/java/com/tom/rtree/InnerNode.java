@@ -308,11 +308,13 @@ public class InnerNode<T> extends RTreeNode<T> implements Node<T> {
    */
   @Override
   public Node<T> remove(T element) {
+    log.trace("want to remove {} from {}", element, this);
     LeafNode<T> containingLeaf = getContainingLeaf(element);
     if (containingLeaf == null) {
-      log.warn("{} is not in the tree! ", element);
+      log.warn("{} is not in this subtree! ", element);
       return this;
     }
+    log.trace("remove {} from {}", element, containingLeaf);
     return containingLeaf.remove(element);
   }
 
