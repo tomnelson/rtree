@@ -216,12 +216,16 @@ public class RTreeVisualizer extends JPanel {
       LeafNode<Object> leafParent = (LeafNode<Object>) parent;
       // get a color from the hashcode of this parent, and use that color for the parent and its children
       String hashString = "" + parent.hashCode();
-      String lastSix = hashString.substring(hashString.length() - 6);
-      int rgb = Integer.parseInt(lastSix, 16);
-      Color color = new Color(rgb);
-      map.put(parent.getBounds(), color);
-      for (Shape kidShape : leafParent.collectGrids(new ArrayList<>())) {
-        map.put(kidShape.getBounds(), color);
+      try {
+        String lastSix = hashString.substring(hashString.length() - 6);
+        int rgb = Integer.parseInt(lastSix, 16);
+        Color color = new Color(rgb);
+        map.put(parent.getBounds(), color);
+        for (Shape kidShape : leafParent.collectGrids(new ArrayList<>())) {
+          map.put(kidShape.getBounds(), color);
+        }
+      } catch (Exception ex) {
+        ex.printStackTrace();
       }
     } else {
       for (TreeNode child : parent.getChildren()) {

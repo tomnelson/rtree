@@ -103,7 +103,12 @@ public class RTree<T> {
   }
 
   public void reinsert(SplitterContext<T> splitterContext) {
+
     if (!root.isPresent()) return;
+    log.debug(
+        "average leaf count {}",
+        this.averageLeafCount(root.get(), new double[] {0}, new int[] {0}));
+
     // find all nodes that have leaf children
     List<LeafNode> leafNodes = collectLeafNodes(root.get(), new ArrayList<>());
     // are there dupes?
@@ -122,30 +127,14 @@ public class RTree<T> {
         for (Map.Entry<T, Rectangle2D> entry : nodeMap.entrySet()) {
           entryList.add(entry); // will be sorted at the end
         }
-        //        for (Map.Entry<T, Rectangle2D> entry : entryList) {
-        //          Point2D centerOfEntry =
-        //              new Point2D.Double(entry.getValue().getCenterX(), entry.getValue().getCenterY());
-        //          System.err.println(
-        //              "presort: entry "
-        //                  + entry
-        //                  + " distance is "
-        //                  + centerOfEntry.distance(centerOfLeafNode));
-        //        }
         entryList.sort(new DistanceComparator(centerOfLeafNode));
-        //        for (Map.Entry<T, Rectangle2D> entry : entryList) {
-        //          Point2D centerOfEntry =
-        //              new Point2D.Double(entry.getValue().getCenterX(), entry.getValue().getCenterY());
-        //          System.err.println(
-        //              "sorted: entry "
-        //                  + entry
-        //                  + " distance is "
-        //                  + centerOfEntry.distance(centerOfLeafNode));
-        //        }
 
         // now take 30% from the beginning of the sortedList, remove them all from the tree, then re-insert them all
 
         int size = entryList.size();
-        size *= 0.3;
+        if (size > 5) {
+          size *= 0.3;
+        }
         for (int i = 0; i < size; i++) {
           Map.Entry<T, Rectangle2D> entry = entryList.get(i);
           goners.add(entry);
@@ -296,6 +285,21 @@ public class RTree<T> {
         + ","
         + (int) r.getHeight()
         + "]";
+  }
+
+  private double averageLeafCount(TreeNode parent, double[] average, int[] leafCount) {
+
+    TreeNode start = parent;
+    if (start instanceof LeafNode) {
+      int childSum = ((LeafNode) start).map.size();
+      average[0] = (average[0] * leafCount[0] + childSum) / (leafCount[0] + 1);
+      leafCount[0]++;
+    } else {
+      for (TreeNode node : parent.getChildren()) {
+        average[0] = averageLeafCount(node, average, leafCount);
+      }
+    }
+    return average[0];
   }
 
   private static <T> String asString(Collection<RTree<T>> trees) {
