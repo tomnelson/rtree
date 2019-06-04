@@ -9,12 +9,20 @@ import com.tom.rtree.RStarSplitter;
 import com.tom.rtree.RTree;
 import com.tom.rtree.SplitterContext;
 import java.awt.*;
+import java.awt.event.ItemEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 import javax.swing.*;
+
+import com.tom.rtree.TreeNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,10 +43,15 @@ public class RTreeVisualizer extends JPanel {
       SplitterContext.of(new RStarLeafSplitter<>(), new RStarSplitter<>());
   RTree<Object> rTree = RTree.create();
   int count;
+  boolean running;
 
   public RTreeVisualizer() {
     setBackground(Color.white);
     setLayout(new BorderLayout());
+
+    JToggleButton timerAdd = new JToggleButton("Timed add");
+    timerAdd.addItemListener( // who cares
+        this::itemStateChanged);
 
     JButton addStuff = new JButton("Add something");
     addStuff.addActionListener(e -> addRandomShape());
@@ -52,11 +65,18 @@ public class RTreeVisualizer extends JPanel {
           public void paint(Graphics g) {
             super.paint(g);
             Graphics2D g2d = (Graphics2D) g;
-            Collection<Shape> grid = rTree.getGrid();
-            log.info("grid size is {}", grid.size());
-            for (Shape r : grid) {
-              g2d.draw(r);
+            Color oldColor = g2d.getColor();
+            Map<Rectangle2D, Color> map = getGridInColor();
+            for (Map.Entry<Rectangle2D, Color> entry : map.entrySet()) {
+              g2d.setColor(entry.getValue());
+              g2d.draw(entry.getKey());
             }
+//            Collection<Shape> grid = rTree.getGrid();
+//            log.info("grid size is {}", grid.size());
+//            for (Shape r : grid) {
+//              System.err.println("r hashCode is " + r.hashCode());
+//              g2d.draw(r);
+//            }
           }
         };
     JButton addLots = new JButton("Add Many");
@@ -100,6 +120,7 @@ public class RTreeVisualizer extends JPanel {
         });
 
     JPanel controls = new JPanel();
+    controls.add(timerAdd);
     controls.add(addStuff);
     controls.add(addLots);
     controls.add(clear);
@@ -178,5 +199,59 @@ public class RTreeVisualizer extends JPanel {
     f.getContentPane().add(new RTreeVisualizer());
     f.pack();
     f.setVisible(true);
+  }
+
+  private Map<Rectangle2D, Color> getGridInColor() {
+    Optional<Node<Object>> maybeRoot = rTree.getRoot();
+    if (maybeRoot.isPresent()) {
+      return getGridFor(maybeRoot.get());
+
+    }
+    return Collections.emptyMap();
+  }
+
+  private Map<Rectangle2D, Color> getGridFor(TreeNode parent) {
+    Map<Rectangle2D, Color> map = new HashMap<>();
+    if (parent instanceof LeafNode) {
+      LeafNode<Object> leafParent = (LeafNode<Object>)parent;
+      // get a color from the hashcode of this parent, and use that color for the parent and its children
+      String hashString = ""+parent.hashCode();
+      String lastSix = hashString.substring(hashString.length() - 6);
+      int rgb = Integer.parseInt(lastSix, 16);
+      Color color = new Color(rgb);
+      map.put(parent.getBounds(), color);
+      for (Shape kidShape : leafParent.collectGrids(new ArrayList<>())) {
+        map.put(kidShape.getBounds(), color);
+      }
+    } else {
+      map.put(parent.getBounds(), Color.black);
+      for (TreeNode child : parent.getChildren()) {
+        map.putAll(getGridFor(child));
+      }
+    }
+
+    return map;
+  }
+
+  private void itemStateChanged(ItemEvent e) {
+    if (e.getStateChange() == ItemEvent.SELECTED) {
+      running = true;
+      Thread timerAddThread =
+          new Thread() {
+            public void run() {
+              while (running) {
+                SwingUtilities.invokeLater(() -> addRandomShape());
+                try {
+                  Thread.sleep(500);
+                } catch (InterruptedException ex) {
+                  // who cares
+                }
+              }
+            }
+          };
+      timerAddThread.start();
+    } else {
+      running = false;
+    }
   }
 }
