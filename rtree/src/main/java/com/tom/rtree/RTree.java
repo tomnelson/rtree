@@ -5,8 +5,11 @@ import com.google.common.collect.Sets;
 import java.awt.*;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -96,6 +99,100 @@ public class RTree<T> {
           !got.getParent().isPresent(), "return from InnerNode add has a parent");
       return new RTree(got);
     }
+  }
+
+  public void reinsert(SplitterContext<T> splitterContext) {
+    if (!root.isPresent()) return;
+    // find all nodes that have leaf children
+    List<LeafNode> leafNodes = collectLeafNodes(root.get(), new ArrayList<>());
+    // for each leaf node, sort the children max to min, according to how far they are from the center
+    List<Map.Entry<T, Rectangle2D>> goners = new ArrayList<>();
+
+    for (TreeNode node : leafNodes) {
+      if (node instanceof LeafNode) {
+        Rectangle2D boundsOfLeafNode = node.getBounds();
+        Point2D centerOfLeafNode =
+            new Point2D.Double(boundsOfLeafNode.getCenterX(), boundsOfLeafNode.getCenterY());
+        LeafNode leafNode = (LeafNode) node;
+        NodeMap<T> nodeMap = leafNode.map;
+        List<Map.Entry<T, Rectangle2D>> entryList = new ArrayList<>();
+        for (Map.Entry<T, Rectangle2D> entry : nodeMap.entrySet()) {
+          entryList.add(entry); // will be sorted at the end
+        }
+        for (Map.Entry<T, Rectangle2D> entry : entryList) {
+          Point2D centerOfEntry =
+              new Point2D.Double(entry.getValue().getCenterX(), entry.getValue().getCenterY());
+          System.err.println(
+              "presort: entry "
+                  + entry
+                  + " distance is "
+                  + centerOfEntry.distance(centerOfLeafNode));
+        }
+        entryList.sort(new DistanceComparator(centerOfLeafNode));
+        for (Map.Entry<T, Rectangle2D> entry : entryList) {
+          Point2D centerOfEntry =
+              new Point2D.Double(entry.getValue().getCenterX(), entry.getValue().getCenterY());
+          System.err.println(
+              "sorted: entry "
+                  + entry
+                  + " distance is "
+                  + centerOfEntry.distance(centerOfLeafNode));
+        }
+
+        // now take 30% from the beginning of the sortedList, remove them all from the tree, then re-insert them all
+
+        int size = entryList.size();
+        size *= 0.3;
+        for (int i = 0; i < size; i++) {
+          Map.Entry<T, Rectangle2D> entry = entryList.get(i);
+          goners.add(entry);
+        }
+        for (Map.Entry<T, Rectangle2D> goner : goners) {
+          remove(goner.getKey());
+        }
+      }
+    }
+    for (Map.Entry<T, Rectangle2D> goner : goners) {
+      add(splitterContext, goner.getKey(), goner.getValue());
+    }
+  }
+
+  class DistanceComparator implements Comparator<Map.Entry<T, Rectangle2D>> {
+
+    Point2D center;
+
+    public DistanceComparator(Point2D center) {
+      this.center = center;
+    }
+
+    @Override
+    public int compare(Map.Entry<T, Rectangle2D> o1, Map.Entry<T, Rectangle2D> o2) {
+      Point2D centerOfO1 =
+          new Point2D.Double(o1.getValue().getCenterX(), o1.getValue().getCenterY());
+      Point2D centerOfO2 =
+          new Point2D.Double(o2.getValue().getCenterX(), o2.getValue().getCenterY());
+      if (center.distance(centerOfO1) > center.distance(centerOfO2)) {
+        return -1;
+      } else if (center.distance(centerOfO1) < center.distance(centerOfO2)) {
+        return 1;
+      } else {
+        return 0;
+      }
+    }
+  }
+
+  private List<LeafNode> collectLeafNodes(TreeNode parent, List<LeafNode> leafNodes) {
+    if (parent instanceof Node) {
+      Node<T> node = (Node<T>) parent;
+      if (node instanceof LeafNode) {
+        leafNodes.add((LeafNode) node);
+      } else {
+        for (TreeNode kid : parent.getChildren()) {
+          collectLeafNodes(kid, leafNodes);
+        }
+      }
+    }
+    return leafNodes;
   }
 
   /**

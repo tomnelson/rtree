@@ -8,6 +8,7 @@ import com.tom.rtree.RStarLeafSplitter;
 import com.tom.rtree.RStarSplitter;
 import com.tom.rtree.RTree;
 import com.tom.rtree.SplitterContext;
+import com.tom.rtree.TreeNode;
 import java.awt.*;
 import java.awt.event.ItemEvent;
 import java.awt.event.MouseAdapter;
@@ -21,8 +22,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import javax.swing.*;
-
-import com.tom.rtree.TreeNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -71,12 +70,12 @@ public class RTreeVisualizer extends JPanel {
               g2d.setColor(entry.getValue());
               g2d.draw(entry.getKey());
             }
-//            Collection<Shape> grid = rTree.getGrid();
-//            log.info("grid size is {}", grid.size());
-//            for (Shape r : grid) {
-//              System.err.println("r hashCode is " + r.hashCode());
-//              g2d.draw(r);
-//            }
+            //            Collection<Shape> grid = rTree.getGrid();
+            //            log.info("grid size is {}", grid.size());
+            //            for (Shape r : grid) {
+            //              System.err.println("r hashCode is " + r.hashCode());
+            //              g2d.draw(r);
+            //            }
           }
         };
     JButton addLots = new JButton("Add Many");
@@ -103,6 +102,13 @@ public class RTreeVisualizer extends JPanel {
         });
     JButton samePoint = new JButton("Add Same");
     samePoint.addActionListener(e -> addShapeAt(new Point2D.Double(200, 200)));
+
+    JButton reinsert = new JButton("Re-insert");
+    reinsert.addActionListener(
+        e -> {
+          rTree.reinsert(splitterContext);
+          repaint();
+        });
     JButton clear = new JButton("clear");
     clear.addActionListener(
         e -> {
@@ -125,6 +131,7 @@ public class RTreeVisualizer extends JPanel {
     controls.add(addLots);
     controls.add(clear);
     controls.add(samePoint);
+    controls.add(reinsert);
     add(drawingPane);
     add(controls, BorderLayout.SOUTH);
   }
@@ -205,7 +212,6 @@ public class RTreeVisualizer extends JPanel {
     Optional<Node<Object>> maybeRoot = rTree.getRoot();
     if (maybeRoot.isPresent()) {
       return getGridFor(maybeRoot.get());
-
     }
     return Collections.emptyMap();
   }
@@ -213,9 +219,9 @@ public class RTreeVisualizer extends JPanel {
   private Map<Rectangle2D, Color> getGridFor(TreeNode parent) {
     Map<Rectangle2D, Color> map = new HashMap<>();
     if (parent instanceof LeafNode) {
-      LeafNode<Object> leafParent = (LeafNode<Object>)parent;
+      LeafNode<Object> leafParent = (LeafNode<Object>) parent;
       // get a color from the hashcode of this parent, and use that color for the parent and its children
-      String hashString = ""+parent.hashCode();
+      String hashString = "" + parent.hashCode();
       String lastSix = hashString.substring(hashString.length() - 6);
       int rgb = Integer.parseInt(lastSix, 16);
       Color color = new Color(rgb);
@@ -224,7 +230,6 @@ public class RTreeVisualizer extends JPanel {
         map.put(kidShape.getBounds(), color);
       }
     } else {
-      map.put(parent.getBounds(), Color.black);
       for (TreeNode child : parent.getChildren()) {
         map.putAll(getGridFor(child));
       }
@@ -242,7 +247,7 @@ public class RTreeVisualizer extends JPanel {
               while (running) {
                 SwingUtilities.invokeLater(() -> addRandomShape());
                 try {
-                  Thread.sleep(500);
+                  Thread.sleep(100);
                 } catch (InterruptedException ex) {
                   // who cares
                 }
