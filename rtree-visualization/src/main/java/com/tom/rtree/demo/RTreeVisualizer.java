@@ -70,6 +70,7 @@ public class RTreeVisualizer extends JPanel {
               g2d.setColor(entry.getValue());
               g2d.draw(entry.getKey());
             }
+            g2d.setColor(oldColor);
           }
         };
     JButton addLots = new JButton("Add Many");
@@ -228,6 +229,7 @@ public class RTreeVisualizer extends JPanel {
         ex.printStackTrace();
       }
     } else {
+      map.put(parent.getBounds(), Color.pink);
       for (TreeNode child : parent.getChildren()) {
         map.putAll(getGridFor(child));
       }
