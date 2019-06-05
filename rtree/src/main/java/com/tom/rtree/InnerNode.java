@@ -153,10 +153,16 @@ public class InnerNode<T> extends RTreeNode<T> implements Node<T> {
   public T getPickedObject(Point2D p) {
     T picked = null;
     if (getBounds().contains(p)) {
+      log.debug("{} does contain {}", this, p);
       int size = children.size();
       for (int i = 0; i < size; i++) {
-        return children.get(i).getPickedObject(p);
+        picked = children.get(i).getPickedObject(p);
+        if (picked != null) {
+          break;
+        }
       }
+    } else {
+      log.debug("{} does not contain {}", this, p);
     }
     return picked;
   }

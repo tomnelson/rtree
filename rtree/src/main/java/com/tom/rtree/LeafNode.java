@@ -284,8 +284,10 @@ public class LeafNode<T> extends RTreeNode<T> implements Node<T> {
     for (Map.Entry<T, Rectangle2D> entry : map.entrySet()) {
       if (entry.getValue().contains(p)) {
         picked = entry.getKey();
+        log.debug("{} contains {}", this, p);
       }
     }
+    log.debug("returning {}", picked);
     return picked;
   }
 

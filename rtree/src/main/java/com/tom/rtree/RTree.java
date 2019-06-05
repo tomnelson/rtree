@@ -115,7 +115,7 @@ public class RTree<T> {
     Set<LeafNode> leafNodeSet = new HashSet<>(leafNodes);
     // for each leaf node, sort the children max to min, according to how far they are from the center
     List<Map.Entry<T, Rectangle2D>> goners = new ArrayList<>();
-    int averageSize = (int)this.averageLeafCount(root.get(), new double[]{0}, new int[]{0});
+    int averageSize = (int) this.averageLeafCount(root.get(), new double[] {0}, new int[] {0});
 
     for (TreeNode node : leafNodes) {
       if (node instanceof LeafNode) {

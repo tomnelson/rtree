@@ -20,8 +20,8 @@ public interface Node<T> extends TreeNode, Bounded {
 
   Logger log = LoggerFactory.getLogger(Node.class);
 
-  public static final int M = 10;
-  public static final int m = (int) (M * .4); // m is 40% of M
+  int M = 10;
+  int m = (int) (M * .4); // m is 40% of M
 
   String asString(String margin);
 
