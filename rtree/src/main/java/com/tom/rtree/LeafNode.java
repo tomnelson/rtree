@@ -108,8 +108,9 @@ public class LeafNode<T> extends RTreeNode<T> implements Node<T> {
         // if there is a parent node, remove this node from it
         // and add the pair from the split
         InnerNode<T> innerNodeParent = (InnerNode<T>) parent.get();
-        innerNodeParent.removeNode(this);
-        return innerNodeParent.add(splitterContext, pair.left, pair.right);
+
+        return innerNodeParent.replaceNode(this, splitterContext, pair.left, pair.right);
+
       } else {
         // if there is no parent, create one then add the pair from the split
         InnerNode<T> newParent = InnerNode.create(pair.left);

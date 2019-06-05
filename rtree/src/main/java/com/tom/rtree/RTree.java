@@ -96,6 +96,9 @@ public class RTree<T> {
 
       InnerNode<T> innerNode = (InnerNode) node;
       Node<T> got = innerNode.add(splitterContext, element, bounds);
+      if (got == null) {
+        log.error("add did not work");
+      }
       Preconditions.checkArgument(
           !got.getParent().isPresent(), "return from InnerNode add has a parent");
       return new RTree(got);
@@ -201,7 +204,11 @@ public class RTree<T> {
     }
     Node<T> rootNode = root.get();
     Node<T> newRoot = rootNode.remove(element);
-    return new RTree(newRoot);
+    if (newRoot.getParent().isPresent()) {
+      return new RTree(newRoot);
+    } else {
+      return RTree.create();
+    }
   }
 
   /**

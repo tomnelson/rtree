@@ -300,12 +300,14 @@ public class InnerNode<T> extends RTreeNode<T> implements Node<T> {
     Optional<Node<T>> pathToFollow = splitterContext.splitter.chooseSubtree(this, element, bounds);
     if (pathToFollow.isPresent()) {
       // is pathToFollow the same as this?
-      if (pathToFollow.get().equals(this)) {
-        log.trace("pathToFollow is this");
-        return this.getParent().orElse(this);
-      }
+      //      if (pathToFollow.get().equals(this)) {
+      //        log.trace("pathToFollow is this");
+      //        return this.getParent().orElse(this);
+      //      }
       Node<T> node = pathToFollow.get().add(splitterContext, element, bounds);
       return node.getParent().orElse(node);
+    } else {
+      log.error("no path to follow");
     }
     return null;
   }
@@ -326,7 +328,17 @@ public class InnerNode<T> extends RTreeNode<T> implements Node<T> {
       return this;
     }
     log.trace("remove {} from {}", element, containingLeaf);
-    return containingLeaf.remove(element);
+    Node<T> goner = containingLeaf.remove(element);
+    if (this.getChildren().isEmpty()) {
+      log.debug("removed the last node, should remove this from parent now");
+      Optional<Node<T>> parentOptional = getParent();
+      if (parentOptional.isPresent()) {
+        ((InnerNode) parentOptional.get()).removeNode(this);
+      } else {
+        log.trace("no parent for this " + this);
+      }
+    }
+    return goner;
   }
 
   /**
@@ -343,12 +355,20 @@ public class InnerNode<T> extends RTreeNode<T> implements Node<T> {
   }
 
   /**
-   * directly remove a shild node from this node
+   * directly remove a child node from this node
    *
    * @param node
    */
   void removeNode(Node<T> node) {
     children.remove(node);
+    if (children.isEmpty() && parent.isPresent()) {
+      ((InnerNode<T>) parent.get()).removeNode(this);
+    }
+  }
+
+  InnerNode<T> replaceNode(Node<T> goner, SplitterContext<T> splitterContext, Node<T>... nodes) {
+    children.remove(goner); // no recalculation of size or parent remove, since we immediately add
+    return add(splitterContext, nodes);
   }
 
   InnerNode<T> add(SplitterContext<T> splitterContext, Node<T>... nodes) {
@@ -385,8 +405,9 @@ public class InnerNode<T> extends RTreeNode<T> implements Node<T> {
             pair.left,
             pair.right,
             this);
-        innerNodeParent.removeNode(this);
-        return innerNodeParent.add(splitterContext, pair.left, pair.right);
+
+        return innerNodeParent.replaceNode(this, splitterContext, pair.left, pair.right);
+
       } else {
         // create a new parent
         InnerNode<T> innerNodeParent = InnerNode.create(pair.left);

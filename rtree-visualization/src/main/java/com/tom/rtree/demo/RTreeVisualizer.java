@@ -86,7 +86,7 @@ public class RTreeVisualizer extends JPanel {
               Object o = rTree.getPickedObject(e.getPoint());
 
               rTree = rTree.remove(o);
-              log.info("after removing {} rtree:{}", o, rTree);
+              log.trace("after removing {} rtree:{}", o, rTree);
               repaint();
 
             } else {
@@ -110,15 +110,15 @@ public class RTreeVisualizer extends JPanel {
           rTree = RTree.create();
           repaint();
         });
-    addMouseListener(
-        new MouseAdapter() {
-          @Override
-          public void mouseClicked(MouseEvent e) {
-            log.info("clicked at {}", e.getPoint());
-            String node = "N" + count++;
-            repaint();
-          }
-        });
+    //    addMouseListener(
+    //        new MouseAdapter() {
+    //          @Override
+    //          public void mouseClicked(MouseEvent e) {
+    //            log.info("clicked at {}", e.getPoint());
+    //            String node = "N" + count++;
+    //            repaint();
+    //          }
+    //        });
 
     JPanel controls = new JPanel();
     controls.add(timerAdd);
@@ -161,7 +161,7 @@ public class RTreeVisualizer extends JPanel {
     Rectangle2D r =
         new Rectangle2D.Double(p.getX() - width / 2, p.getY() - height / 2, width, height);
     rTree = rTree.add(splitterContext, "N" + count++, r);
-    log.info("after adding {} rtree:{}", "N" + (count - 1), rTree);
+    log.debug("after adding {} at {}, rtree:{}", "N" + (count - 1), p, rTree);
     checkBounds(rTree);
     repaint();
   }

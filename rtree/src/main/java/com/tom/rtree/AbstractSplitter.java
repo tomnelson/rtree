@@ -74,6 +74,7 @@ public abstract class AbstractSplitter<T> {
       }
     }
     if (winner == null) {
+      log.error("winner was null");
       winner = Optional.of(nodeToSplit);
     }
     return winner;
@@ -157,6 +158,7 @@ public abstract class AbstractSplitter<T> {
       }
     }
     if (!winner.isPresent()) {
+      log.error("no winner");
       winner = Optional.of(nodeToSplit);
     }
     return winner;
