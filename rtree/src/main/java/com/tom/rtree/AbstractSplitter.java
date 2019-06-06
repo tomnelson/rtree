@@ -134,11 +134,11 @@ public abstract class AbstractSplitter<T> {
               leastEnlargement = enlargement;
               if (log.isTraceEnabled()) {
                 whatKind =
-                        "won on kid size < winner size ("
-                                + kid.size()
-                                + " < "
-                                + winner.get().size()
-                                + ")";
+                    "won on kid size < winner size ("
+                        + kid.size()
+                        + " < "
+                        + winner.get().size()
+                        + ")";
               }
               log.trace("won on kid size {} < {}", kid.size(), winner.get().size());
             } else {
@@ -148,7 +148,7 @@ public abstract class AbstractSplitter<T> {
             // not tie for area, pick smallest area
             if (log.isTraceEnabled()) {
               whatKind =
-                      "won on area unionArea < winnerArea (" + unionArea + " < " + winnerArea + ")";
+                  "won on area unionArea < winnerArea (" + unionArea + " < " + winnerArea + ")";
             }
             log.trace("won on area {} < {}", unionArea, winnerArea);
 
@@ -163,11 +163,11 @@ public abstract class AbstractSplitter<T> {
           log.trace("won on enlargement {} < {}", enlargement, leastEnlargement);
           if (log.isTraceEnabled()) {
             whatKind =
-                    "won on enlargement < leastEnlargement ("
-                            + enlargement
-                            + " < "
-                            + leastEnlargement
-                            + ")";
+                "won on enlargement < leastEnlargement ("
+                    + enlargement
+                    + " < "
+                    + leastEnlargement
+                    + ")";
           }
           leastEnlargement = enlargement;
           winningUnion = Optional.of(union);
