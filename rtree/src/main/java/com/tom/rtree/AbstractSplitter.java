@@ -92,6 +92,7 @@ public abstract class AbstractSplitter<T> {
     double leastEnlargement = Double.MAX_VALUE;
     Optional<Node<T>> winner = Optional.empty();
     Optional<Rectangle2D> winningUnion = Optional.empty();
+    String whatKind = "";
     for (Node<T> kid : nodeToSplit.getChildren()) {
       Rectangle2D kidRectangle = kid.getBounds();
 
@@ -100,7 +101,10 @@ public abstract class AbstractSplitter<T> {
         winner = Optional.of(kid);
         leastOverlap = overlap;
         winningUnion = Optional.of(kid.getBounds().createUnion(bounds));
-        log.trace("won as first");
+        if (log.isTraceEnabled()) {
+          whatKind = "won as first";
+          log.trace("won as first");
+        }
       } else if (overlap == leastOverlap) {
         log.trace("tie on overlap {} == {}", overlap, leastOverlap);
         // tie for overlap, consider enlargement
@@ -128,12 +132,24 @@ public abstract class AbstractSplitter<T> {
               winner = Optional.of(kid);
               winningUnion = Optional.of(union);
               leastEnlargement = enlargement;
+              if (log.isTraceEnabled()) {
+                whatKind =
+                        "won on kid size < winner size ("
+                                + kid.size()
+                                + " < "
+                                + winner.get().size()
+                                + ")";
+              }
               log.trace("won on kid size {} < {}", kid.size(), winner.get().size());
             } else {
               log.trace("kept winner based on kid size {} >= {}", kid.size(), winner.get().size());
             }
           } else if (unionArea < winnerArea) {
             // not tie for area, pick smallest area
+            if (log.isTraceEnabled()) {
+              whatKind =
+                      "won on area unionArea < winnerArea (" + unionArea + " < " + winnerArea + ")";
+            }
             log.trace("won on area {} < {}", unionArea, winnerArea);
 
             // union area is smaller, choose it
@@ -145,7 +161,14 @@ public abstract class AbstractSplitter<T> {
           // not tie for enlargement, pick smallest enlargement
           // new enlargement is smaller, it wins
           log.trace("won on enlargement {} < {}", enlargement, leastEnlargement);
-
+          if (log.isTraceEnabled()) {
+            whatKind =
+                    "won on enlargement < leastEnlargement ("
+                            + enlargement
+                            + " < "
+                            + leastEnlargement
+                            + ")";
+          }
           leastEnlargement = enlargement;
           winningUnion = Optional.of(union);
           winner = Optional.of(kid);
@@ -153,14 +176,21 @@ public abstract class AbstractSplitter<T> {
 
       } else if (overlap < leastOverlap) {
         log.trace("won on overlap {} < {}", overlap, leastOverlap);
+        if (log.isTraceEnabled()) {
+          whatKind = "won on overlap < leastOverlap (" + overlap + " < " + leastOverlap + ")";
+        }
         leastOverlap = overlap;
         winner = Optional.of(kid);
       }
     }
     if (!winner.isPresent()) {
       log.error("no winner");
+      if (log.isTraceEnabled()) {
+        whatKind = "no winner";
+      }
       winner = Optional.of(nodeToSplit);
     }
+    log.trace("winning style: {}", whatKind);
     return winner;
   }
 }

@@ -161,7 +161,7 @@ public class RTreeVisualizer extends JPanel {
     Rectangle2D r =
         new Rectangle2D.Double(p.getX() - width / 2, p.getY() - height / 2, width, height);
     rTree = rTree.add(splitterContext, "N" + count++, r);
-    log.debug("after adding {} at {}, rtree:{}", "N" + (count - 1), p, rTree);
+    log.trace("after adding {} at {}, rtree:{}", "N" + (count - 1), p, rTree);
     checkBounds(rTree);
     repaint();
   }
