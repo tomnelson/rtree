@@ -94,9 +94,7 @@ public class RTreeTest {
       Assert.assertTrue(((LeafNode) parent).size() > 0);
     } else {
       Assert.assertTrue(parent.getChildren().size() > 0);
-      for (TreeNode kid : parent.getChildren()) {
-        assertHasChildren(kid);
-      }
+      parent.getChildren().forEach(this::assertHasChildren);
     }
   }
 }

@@ -147,7 +147,7 @@ public class RTree<T> {
     }
     for (Map.Entry<T, Rectangle2D> goner : goners) {
       rtree = rtree.remove(goner.getKey());
-      log.info("removed one, tree size now {}", rtree.count());
+      log.trace("removed one, tree size now {}", rtree.count());
     }
     log.info("removed {} goners", goners.size());
     log.debug("removed goners, tree size is {}", rtree.count());
@@ -202,37 +202,20 @@ public class RTree<T> {
    * @return
    */
   public RTree<T> remove(T element) {
-    log.info("want to remove {} from tree size {}", element, this.count());
+    log.trace("want to remove {} from tree size {}", element, this.count());
     if (!root.isPresent()) {
       // this tree is empty
       return new RTree();
     }
     Node<T> rootNode = root.get();
     Node<T> newRoot = rootNode.remove(element);
-    // if the new node is an empty leaf node, then it is the root node
-    // and we should return a new empty RTree
-    if (newRoot instanceof LeafNode) {
-      LeafNode newRootLeafNode = (LeafNode) newRoot;
-      if (newRootLeafNode.map.isEmpty()) {
-        return RTree.create();
-      } else {
-        return this;
-      }
-    } else {
-      // innernode
-      InnerNode newRootInnerNode = (InnerNode) newRoot;
-      if (newRootInnerNode.getChildren().isEmpty()) {
-        return RTree.create();
-      } else {
-        return this;
-      }
-    }
 
-    //    if (!newRoot.getParent().isPresent()) {
-    //      return new RTree(newRoot);
-    //    } else {
-    //      return RTree.create();
-    //    }
+    // if the newRoot is empty, return a new empty RTree, otherwise, return this
+    if (newRoot.count() == 0) {
+      return RTree.create();
+    } else {
+      return this;
+    }
   }
 
   /**
