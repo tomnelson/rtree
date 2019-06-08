@@ -101,7 +101,7 @@ public class RTreeVisualizer extends JPanel {
     JButton reinsert = new JButton("Re-insert");
     reinsert.addActionListener(
         e -> {
-          rTree.reinsert(splitterContext);
+          rTree = RTree.<Object>reinsert(rTree, splitterContext);
           repaint();
         });
     JButton clear = new JButton("clear");
@@ -110,15 +110,6 @@ public class RTreeVisualizer extends JPanel {
           rTree = RTree.create();
           repaint();
         });
-    //    addMouseListener(
-    //        new MouseAdapter() {
-    //          @Override
-    //          public void mouseClicked(MouseEvent e) {
-    //            log.info("clicked at {}", e.getPoint());
-    //            String node = "N" + count++;
-    //            repaint();
-    //          }
-    //        });
 
     JPanel controls = new JPanel();
     controls.add(timerAdd);

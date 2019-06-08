@@ -1,11 +1,14 @@
 package com.tom.rtree;
 
-import java.awt.*;
 import java.awt.geom.Rectangle2D;
 import org.junit.Assert;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class RTreeTest {
+
+  private static final Logger log = LoggerFactory.getLogger(RTreeTest.class);
 
   SplitterContext<String> splitterContext =
       SplitterContext.of(new RStarLeafSplitter<>(), new RStarSplitter<>());
@@ -24,26 +27,60 @@ public class RTreeTest {
   }
 
   @Test
+  public void testAddRemoveOne() {
+    addRandomShape();
+    log.info("rtree: {}", rTree);
+    rTree = rTree.remove("N0");
+    log.info("rtree: {}", rTree);
+    Assert.assertTrue(rTree.count() == 0);
+  }
+
+  @Test
+  public void testAddTwoRemoveOne() {
+    addRandomShape();
+    addRandomShape();
+    log.info("rtree: {}", rTree);
+    rTree = rTree.remove("N0");
+    log.info("rtree: {}", rTree);
+    Assert.assertTrue(rTree.count() == 1);
+  }
+
+  @Test
+  public void testAddHundredRemoveOne() {
+    for (int i = 0; i < 100; i++) {
+      addRandomShape();
+    }
+    Assert.assertTrue(rTree.count() == 100);
+    rTree = rTree.remove("N0");
+    log.info("rtree: {}", rTree);
+    Assert.assertTrue(rTree.count() == 99);
+  }
+
+  @Test
   public void testAddRemoveAll() {
-    System.err.println("RTREE: " + rTree);
-    for (int i = 0; i < 20000; i++) {
+    log.info("RTREE: " + rTree);
+    count = 0;
+    for (int i = 0; i < 1000; i++) {
       addRandomShape();
     }
     Assert.assertTrue(rTree.getRoot().isPresent());
+    Assert.assertTrue(rTree.count() == 1000);
     Node<String> root = rTree.getRoot().get();
-    System.err.println("Root kid size is " + root.getChildren().size());
+    log.info("Root kid size is {}", root.getChildren().size());
+    log.info("RTree count: {}", rTree.count());
     assertHasChildren(root);
-    System.err.println("RTREE: " + rTree);
+    //    System.err.println("RTREE: " + rTree);
 
     for (int i = 0; i < 1000; i++) {
       rTree = rTree.remove("N" + i);
+      log.info("count now {}", rTree.count());
     }
     Assert.assertFalse(rTree.getRoot().isPresent());
     count = 0;
     for (int i = 0; i < 10; i++) {
       addRandomShape();
     }
-    System.err.println("RTREE: " + rTree);
+    log.info("RTREE: " + rTree);
     assertHasChildren(rTree.getRoot().get());
   }
 

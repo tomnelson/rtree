@@ -105,20 +105,20 @@ public class RTree<T> {
     }
   }
 
-  public void reinsert(SplitterContext<T> splitterContext) {
+  public static <T> RTree reinsert(RTree<T> rtree, SplitterContext<T> splitterContext) {
 
-    if (!root.isPresent()) return;
+    if (!rtree.root.isPresent()) return rtree;
+    Node<T> root = rtree.root.get();
     log.debug(
-        "average leaf count {}",
-        this.averageLeafCount(root.get(), new double[] {0}, new int[] {0}));
+        "average leaf count {}", rtree.averageLeafCount(root, new double[] {0}, new int[] {0}));
 
     // find all nodes that have leaf children
-    List<LeafNode> leafNodes = collectLeafNodes(root.get(), new ArrayList<>());
+    List<LeafNode> leafNodes = rtree.collectLeafNodes(root, new ArrayList<>());
     // are there dupes?
     Set<LeafNode> leafNodeSet = new HashSet<>(leafNodes);
     // for each leaf node, sort the children max to min, according to how far they are from the center
     List<Map.Entry<T, Rectangle2D>> goners = new ArrayList<>();
-    int averageSize = (int) this.averageLeafCount(root.get(), new double[] {0}, new int[] {0});
+    int averageSize = (int) rtree.averageLeafCount(root, new double[] {0}, new int[] {0});
 
     for (TreeNode node : leafNodes) {
       if (node instanceof LeafNode) {
@@ -146,14 +146,19 @@ public class RTree<T> {
       }
     }
     for (Map.Entry<T, Rectangle2D> goner : goners) {
-      remove(goner.getKey());
+      rtree = rtree.remove(goner.getKey());
+      log.info("removed one, tree size now {}", rtree.count());
     }
+    log.info("removed {} goners", goners.size());
+    log.debug("removed goners, tree size is {}", rtree.count());
     for (Map.Entry<T, Rectangle2D> goner : goners) {
-      add(splitterContext, goner.getKey(), goner.getValue());
+      rtree = rtree.add(splitterContext, goner.getKey(), goner.getValue());
     }
+    log.info("after adding back {} goners, rtree size is {}", goners.size(), rtree.count());
+    return rtree;
   }
 
-  class DistanceComparator implements Comparator<Map.Entry<T, Rectangle2D>> {
+  static class DistanceComparator<T> implements Comparator<Map.Entry<T, Rectangle2D>> {
     Point2D center;
 
     public DistanceComparator(Point2D center) {
@@ -197,18 +202,37 @@ public class RTree<T> {
    * @return
    */
   public RTree<T> remove(T element) {
-    log.trace("want to remove {} from tree {}", element, this);
+    log.info("want to remove {} from tree size {}", element, this.count());
     if (!root.isPresent()) {
       // this tree is empty
       return new RTree();
     }
     Node<T> rootNode = root.get();
     Node<T> newRoot = rootNode.remove(element);
-    if (newRoot.getParent().isPresent()) {
-      return new RTree(newRoot);
+    // if the new node is an empty leaf node, then it is the root node
+    // and we should return a new empty RTree
+    if (newRoot instanceof LeafNode) {
+      LeafNode newRootLeafNode = (LeafNode) newRoot;
+      if (newRootLeafNode.map.isEmpty()) {
+        return RTree.create();
+      } else {
+        return this;
+      }
     } else {
-      return RTree.create();
+      // innernode
+      InnerNode newRootInnerNode = (InnerNode) newRoot;
+      if (newRootInnerNode.getChildren().isEmpty()) {
+        return RTree.create();
+      } else {
+        return this;
+      }
     }
+
+    //    if (!newRoot.getParent().isPresent()) {
+    //      return new RTree(newRoot);
+    //    } else {
+    //      return RTree.create();
+    //    }
   }
 
   /**
