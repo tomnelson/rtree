@@ -15,6 +15,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -76,6 +77,9 @@ public class RTreeVisualizer extends JPanel {
     JButton addLots = new JButton("Add Many");
     addLots.addActionListener(e -> addMany());
 
+    JButton bulkAddLots = new JButton("Bulk Add");
+    bulkAddLots.addActionListener(e -> bulkInsertMany());
+
     drawingPane.addMouseListener(
         new MouseAdapter() {
           @Override
@@ -115,6 +119,7 @@ public class RTreeVisualizer extends JPanel {
     controls.add(timerAdd);
     controls.add(addStuff);
     controls.add(addLots);
+    controls.add(bulkAddLots);
     controls.add(clear);
     controls.add(samePoint);
     controls.add(reinsert);
@@ -141,10 +146,26 @@ public class RTreeVisualizer extends JPanel {
       Rectangle2D r = new Rectangle2D.Double(x, y, width, height);
       rTree = rTree.add(splitterContext, "N" + count++, r);
       checkBounds(rTree);
-      repaint();
+//      repaint();
     }
     repaint();
   }
+
+  private void bulkInsertMany() {
+    java.util.List<Map.Entry<Object,Rectangle2D>> list = new ArrayList<>();
+    for (int i = 0; i < 100; i++) {
+      double width = 4;
+      double height = 4;
+      double x = Math.random() * getWidth() - width;
+      double y = Math.random() * getHeight() - height;
+      Rectangle2D r = new Rectangle2D.Double(x, y, width, height);
+      list.add(new AbstractMap.SimpleEntry("N"+count++, r));
+    }
+    rTree = RTree.bulkAdd(splitterContext, rTree, list);
+    checkBounds(rTree);
+    repaint();
+  }
+
 
   private void addShapeAt(Point2D p) {
     double width = 10;

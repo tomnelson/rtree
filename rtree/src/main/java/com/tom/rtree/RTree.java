@@ -105,6 +105,20 @@ public class RTree<T> {
     }
   }
 
+  public static <T> RTree<T> bulkAdd(
+      SplitterContext<T> splitterContext,
+      RTree<T> rtree,
+      Collection<Map.Entry<T, Rectangle2D>> items) {
+    // sort the items
+    List<Map.Entry<T, Rectangle2D>> sortedList = new ArrayList<>();
+    sortedList.addAll(items);
+    sortedList.sort(new HorizontalCenterNodeComparator<T>());
+    for (Map.Entry<T, Rectangle2D> entry : sortedList) {
+      rtree = rtree.add(splitterContext, entry.getKey(), entry.getValue());
+    }
+    return rtree;
+  }
+
   public static <T> RTree reinsert(RTree<T> rtree, SplitterContext<T> splitterContext) {
 
     if (!rtree.root.isPresent()) return rtree;

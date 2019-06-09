@@ -355,7 +355,8 @@ public class InnerNode<T> extends RTreeNode<T> implements Node<T> {
   }
 
   /**
-   * directly remove a child node from this node
+   * directly remove a child node from this node if this node becomes empty, recursively remove it
+   * from the parent
    *
    * @param node
    */
@@ -366,6 +367,14 @@ public class InnerNode<T> extends RTreeNode<T> implements Node<T> {
     }
   }
 
+  /**
+   * Replace the passed node with the new nodes.
+   *
+   * @param goner
+   * @param splitterContext
+   * @param nodes
+   * @return
+   */
   InnerNode<T> replaceNode(Node<T> goner, SplitterContext<T> splitterContext, Node<T>... nodes) {
     children.remove(goner); // no recalculation of size or parent remove, since we immediately add
     return add(splitterContext, nodes);
