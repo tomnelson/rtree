@@ -146,26 +146,25 @@ public class RTreeVisualizer extends JPanel {
       Rectangle2D r = new Rectangle2D.Double(x, y, width, height);
       rTree = rTree.add(splitterContext, "N" + count++, r);
       checkBounds(rTree);
-//      repaint();
+      //      repaint();
     }
     repaint();
   }
 
   private void bulkInsertMany() {
-    java.util.List<Map.Entry<Object,Rectangle2D>> list = new ArrayList<>();
+    java.util.List<Map.Entry<Object, Rectangle2D>> list = new ArrayList<>();
     for (int i = 0; i < 100; i++) {
       double width = 4;
       double height = 4;
       double x = Math.random() * getWidth() - width;
       double y = Math.random() * getHeight() - height;
       Rectangle2D r = new Rectangle2D.Double(x, y, width, height);
-      list.add(new AbstractMap.SimpleEntry("N"+count++, r));
+      list.add(new AbstractMap.SimpleEntry("N" + count++, r));
     }
     rTree = RTree.bulkAdd(splitterContext, rTree, list);
     checkBounds(rTree);
     repaint();
   }
-
 
   private void addShapeAt(Point2D p) {
     double width = 10;
