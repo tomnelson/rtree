@@ -147,9 +147,7 @@ public class RTree<T> {
   }
 
   public static <T> RTree removeForReinsert(
-      RTree<T> rtree,
-      SplitterContext<T> splitterContext,
-      Collection<Map.Entry<T, Rectangle2D>> removed) {
+      RTree<T> rtree, Collection<Map.Entry<T, Rectangle2D>> removed) {
     if (!rtree.root.isPresent()) return rtree;
     Node<T> root = rtree.root.get();
     log.debug(
@@ -158,16 +156,12 @@ public class RTree<T> {
     // find all nodes that have leaf children
     List<LeafNode> leafNodes = rtree.collectLeafNodes(root, new ArrayList<>());
     // are there dupes?
-    Set<LeafNode> leafNodeSet = new HashSet<>(leafNodes);
     // for each leaf node, sort the children max to min, according to how far they are from the center
     List<Map.Entry<T, Rectangle2D>> goners = new ArrayList<>();
     int averageSize = (int) rtree.averageLeafCount(root, new double[] {0}, new int[] {0});
 
     for (TreeNode node : leafNodes) {
       if (node instanceof LeafNode) {
-        //        Rectangle2D boundsOfLeafNode = node.getBounds();
-        //        Point2D centerOfLeafNode =
-        //            new Point2D.Double(boundsOfLeafNode.getCenterX(), boundsOfLeafNode.getCenterY());
         LeafNode leafNode = (LeafNode) node;
         NodeMap<T> nodeMap = leafNode.map;
         List<Map.Entry<T, Rectangle2D>> entryList = new ArrayList<>();
@@ -192,22 +186,6 @@ public class RTree<T> {
       log.trace("removed one, tree size now {}", rtree.count());
     }
     removed.addAll(goners);
-    //    log.info("removed {} goners", goners.size());
-    //    log.debug("removed goners, tree size is {}", rtree.count());
-    //    for (Map.Entry<T, Rectangle2D> goner : goners) {
-    //      rtree = rtree.add(splitterContext, goner.getKey(), goner.getValue());
-    //    }
-    //    log.info("after adding back {} goners, rtree size is {}", goners.size(), rtree.count());
-    return rtree;
-  }
-
-  public static <T> RTree reinsertThese(
-      RTree<T> rtree,
-      SplitterContext<T> splitterContext,
-      Collection<Map.Entry<T, Rectangle2D>> addThese) {
-    for (Map.Entry<T, Rectangle2D> entry : addThese) {
-      rtree = RTree.add(rtree, splitterContext, entry);
-    }
     return rtree;
   }
 

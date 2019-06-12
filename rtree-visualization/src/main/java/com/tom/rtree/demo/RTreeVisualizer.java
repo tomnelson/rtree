@@ -107,14 +107,14 @@ public class RTreeVisualizer extends JPanel {
     removeForReinsert.addActionListener(
         e -> {
           goners.clear();
-          rTree = RTree.removeForReinsert(rTree, splitterContext, goners);
+          rTree = RTree.removeForReinsert(rTree, goners);
           repaint();
         });
 
     JButton reinsertThese = new JButton("Reinsert them");
     reinsertThese.addActionListener(
         e -> {
-          rTree = RTree.reinsertThese(rTree, splitterContext, goners);
+          rTree = RTree.addAll(rTree, splitterContext, goners);
           repaint();
         });
 
