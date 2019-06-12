@@ -66,6 +66,21 @@ public class RTree<T> {
     return new RTree();
   }
 
+  public static <T> RTree<T> addAll(
+      RTree<T> rtree,
+      SplitterContext<T> splitterContext,
+      Collection<Map.Entry<T, Rectangle2D>> entries) {
+    for (Map.Entry<T, Rectangle2D> entry : entries) {
+      rtree = add(rtree, splitterContext, entry);
+    }
+    return rtree;
+  }
+
+  public static <T> RTree<T> add(
+      RTree<T> rtree, SplitterContext<T> splitterContext, Map.Entry<T, Rectangle2D> entry) {
+    return add(rtree, splitterContext, entry.getKey(), entry.getValue());
+  }
+
   /**
    * add one element to the RTree
    *
@@ -74,15 +89,16 @@ public class RTree<T> {
    * @param bounds for the element to add
    * @return a new RTree containing the added element
    */
-  public RTree<T> add(SplitterContext<T> splitterContext, T element, Rectangle2D bounds) {
+  public static <T> RTree<T> add(
+      RTree<T> rtree, SplitterContext<T> splitterContext, T element, Rectangle2D bounds) {
     // see if the root is not present (i.e. the RTree is empty
-    if (!root.isPresent()) {
+    if (!rtree.root.isPresent()) {
       // The first element addded to an empty RTree
       // Return a new RTree with the new LeafNode as its root
       return new RTree(LeafNode.create(element, bounds));
     }
     // otherwise...
-    Node<T> node = root.get();
+    Node<T> node = rtree.root.get();
     if (node instanceof LeafNode) {
       // the root is a LeafNode
       LeafNode<T> leafNode = (LeafNode) node;
@@ -106,15 +122,91 @@ public class RTree<T> {
   }
 
   public static <T> RTree<T> bulkAdd(
-      SplitterContext<T> splitterContext,
       RTree<T> rtree,
+      SplitterContext<T> splitterContext,
       Collection<Map.Entry<T, Rectangle2D>> items) {
     // sort the items
     List<Map.Entry<T, Rectangle2D>> sortedList = new ArrayList<>();
     sortedList.addAll(items);
     sortedList.sort(new HorizontalCenterNodeComparator<T>());
     for (Map.Entry<T, Rectangle2D> entry : sortedList) {
-      rtree = rtree.add(splitterContext, entry.getKey(), entry.getValue());
+      rtree = RTree.add(rtree, splitterContext, entry.getKey(), entry.getValue());
+    }
+    return rtree;
+  }
+
+  private static Point2D centerOfGravity(Collection<Rectangle2D> rectangles) {
+    int count = rectangles.size();
+    double xSum = 0;
+    double ySum = 0;
+    for (Rectangle2D r : rectangles) {
+      xSum += r.getCenterX();
+      ySum += r.getCenterY();
+    }
+    return new Point2D.Double(xSum / count, ySum / count);
+  }
+
+  public static <T> RTree removeForReinsert(
+      RTree<T> rtree,
+      SplitterContext<T> splitterContext,
+      Collection<Map.Entry<T, Rectangle2D>> removed) {
+    if (!rtree.root.isPresent()) return rtree;
+    Node<T> root = rtree.root.get();
+    log.debug(
+        "average leaf count {}", rtree.averageLeafCount(root, new double[] {0}, new int[] {0}));
+
+    // find all nodes that have leaf children
+    List<LeafNode> leafNodes = rtree.collectLeafNodes(root, new ArrayList<>());
+    // are there dupes?
+    Set<LeafNode> leafNodeSet = new HashSet<>(leafNodes);
+    // for each leaf node, sort the children max to min, according to how far they are from the center
+    List<Map.Entry<T, Rectangle2D>> goners = new ArrayList<>();
+    int averageSize = (int) rtree.averageLeafCount(root, new double[] {0}, new int[] {0});
+
+    for (TreeNode node : leafNodes) {
+      if (node instanceof LeafNode) {
+        //        Rectangle2D boundsOfLeafNode = node.getBounds();
+        //        Point2D centerOfLeafNode =
+        //            new Point2D.Double(boundsOfLeafNode.getCenterX(), boundsOfLeafNode.getCenterY());
+        LeafNode leafNode = (LeafNode) node;
+        NodeMap<T> nodeMap = leafNode.map;
+        List<Map.Entry<T, Rectangle2D>> entryList = new ArrayList<>();
+        // will be sorted at the end
+        entryList.addAll(nodeMap.entrySet());
+        entryList.sort(new DistanceComparator(RTree.centerOfGravity(nodeMap.values())));
+
+        // now take 30% from the beginning of the sortedList, remove them all from the tree, then re-insert them all
+
+        int size = entryList.size();
+        if (size >= averageSize) {
+          size *= 0.3;
+        }
+        for (int i = 0; i < size; i++) {
+          Map.Entry<T, Rectangle2D> entry = entryList.get(i);
+          goners.add(entry);
+        }
+      }
+    }
+    for (Map.Entry<T, Rectangle2D> goner : goners) {
+      rtree = RTree.remove(rtree, goner.getKey());
+      log.trace("removed one, tree size now {}", rtree.count());
+    }
+    removed.addAll(goners);
+    //    log.info("removed {} goners", goners.size());
+    //    log.debug("removed goners, tree size is {}", rtree.count());
+    //    for (Map.Entry<T, Rectangle2D> goner : goners) {
+    //      rtree = rtree.add(splitterContext, goner.getKey(), goner.getValue());
+    //    }
+    //    log.info("after adding back {} goners, rtree size is {}", goners.size(), rtree.count());
+    return rtree;
+  }
+
+  public static <T> RTree reinsertThese(
+      RTree<T> rtree,
+      SplitterContext<T> splitterContext,
+      Collection<Map.Entry<T, Rectangle2D>> addThese) {
+    for (Map.Entry<T, Rectangle2D> entry : addThese) {
+      rtree = RTree.add(rtree, splitterContext, entry);
     }
     return rtree;
   }
@@ -160,13 +252,13 @@ public class RTree<T> {
       }
     }
     for (Map.Entry<T, Rectangle2D> goner : goners) {
-      rtree = rtree.remove(goner.getKey());
+      rtree = RTree.remove(rtree, goner.getKey());
       log.trace("removed one, tree size now {}", rtree.count());
     }
     log.info("removed {} goners", goners.size());
     log.debug("removed goners, tree size is {}", rtree.count());
     for (Map.Entry<T, Rectangle2D> goner : goners) {
-      rtree = rtree.add(splitterContext, goner.getKey(), goner.getValue());
+      rtree = RTree.add(rtree, splitterContext, goner.getKey(), goner.getValue());
     }
     log.info("after adding back {} goners, rtree size is {}", goners.size(), rtree.count());
     return rtree;
@@ -215,20 +307,20 @@ public class RTree<T> {
    * @param element
    * @return
    */
-  public RTree<T> remove(T element) {
-    log.trace("want to remove {} from tree size {}", element, this.count());
-    if (!root.isPresent()) {
+  public static <T> RTree<T> remove(RTree<T> rtree, T element) {
+    log.trace("want to remove {} from tree size {}", element, rtree.count());
+    if (!rtree.root.isPresent()) {
       // this tree is empty
       return new RTree();
     }
-    Node<T> rootNode = root.get();
+    Node<T> rootNode = rtree.root.get();
     Node<T> newRoot = rootNode.remove(element);
 
     // if the newRoot is empty, return a new empty RTree, otherwise, return this
     if (newRoot.count() == 0) {
       return RTree.create();
     } else {
-      return this;
+      return rtree;
     }
   }
 

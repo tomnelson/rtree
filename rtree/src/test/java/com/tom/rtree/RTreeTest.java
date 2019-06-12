@@ -23,14 +23,14 @@ public class RTreeTest {
     double x = Math.random() * width - w;
     double y = Math.random() * height - h;
     Rectangle2D r = new Rectangle2D.Double(x, y, w, h);
-    rTree = rTree.add(splitterContext, "N" + count++, r);
+    rTree = RTree.add(rTree, splitterContext, "N" + count++, r);
   }
 
   @Test
   public void testAddRemoveOne() {
     addRandomShape();
     log.info("rtree: {}", rTree);
-    rTree = rTree.remove("N0");
+    rTree = RTree.remove(rTree, "N0");
     log.info("rtree: {}", rTree);
     Assert.assertTrue(rTree.count() == 0);
   }
@@ -40,7 +40,7 @@ public class RTreeTest {
     addRandomShape();
     addRandomShape();
     log.info("rtree: {}", rTree);
-    rTree = rTree.remove("N0");
+    rTree = RTree.remove(rTree, "N0");
     log.info("rtree: {}", rTree);
     Assert.assertTrue(rTree.count() == 1);
   }
@@ -51,7 +51,7 @@ public class RTreeTest {
       addRandomShape();
     }
     Assert.assertTrue(rTree.count() == 100);
-    rTree = rTree.remove("N0");
+    rTree = RTree.remove(rTree, "N0");
     log.info("rtree: {}", rTree);
     Assert.assertTrue(rTree.count() == 99);
   }
@@ -72,7 +72,7 @@ public class RTreeTest {
     //    System.err.println("RTREE: " + rTree);
 
     for (int i = 0; i < 1000; i++) {
-      rTree = rTree.remove("N" + i);
+      rTree = RTree.remove(rTree, "N" + i);
       log.info("count now {}", rTree.count());
     }
     Assert.assertFalse(rTree.getRoot().isPresent());

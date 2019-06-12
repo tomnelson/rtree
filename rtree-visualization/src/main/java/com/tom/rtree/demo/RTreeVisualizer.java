@@ -89,7 +89,7 @@ public class RTreeVisualizer extends JPanel {
             if (SwingUtilities.isRightMouseButton(e)) {
               Object o = rTree.getPickedObject(e.getPoint());
 
-              rTree = rTree.remove(o);
+              rTree = RTree.remove(rTree, o);
               log.trace("after removing {} rtree:{}", o, rTree);
               repaint();
 
@@ -102,10 +102,26 @@ public class RTreeVisualizer extends JPanel {
     JButton samePoint = new JButton("Add Same");
     samePoint.addActionListener(e -> addShapeAt(new Point2D.Double(200, 200)));
 
+    final java.util.List<Map.Entry<Object, Rectangle2D>> goners = new ArrayList<>();
+    JButton removeForReinsert = new JButton("Remove for re-insert");
+    removeForReinsert.addActionListener(
+        e -> {
+          goners.clear();
+          rTree = RTree.removeForReinsert(rTree, splitterContext, goners);
+          repaint();
+        });
+
+    JButton reinsertThese = new JButton("Reinsert them");
+    reinsertThese.addActionListener(
+        e -> {
+          rTree = RTree.reinsertThese(rTree, splitterContext, goners);
+          repaint();
+        });
+
     JButton reinsert = new JButton("Re-insert");
     reinsert.addActionListener(
         e -> {
-          rTree = RTree.<Object>reinsert(rTree, splitterContext);
+          rTree = RTree.reinsert(rTree, splitterContext);
           repaint();
         });
     JButton clear = new JButton("clear");
@@ -123,6 +139,8 @@ public class RTreeVisualizer extends JPanel {
     controls.add(clear);
     controls.add(samePoint);
     controls.add(reinsert);
+    controls.add(removeForReinsert);
+    controls.add(reinsertThese);
     add(drawingPane);
     add(controls, BorderLayout.SOUTH);
   }
@@ -133,7 +151,7 @@ public class RTreeVisualizer extends JPanel {
     double x = Math.random() * getWidth() - width;
     double y = Math.random() * getHeight() - height;
     Rectangle2D r = new Rectangle2D.Double(x, y, width, height);
-    rTree = rTree.add(splitterContext, "N" + count++, r);
+    rTree = RTree.add(rTree, splitterContext, "N" + count++, r);
     repaint();
   }
 
@@ -144,7 +162,7 @@ public class RTreeVisualizer extends JPanel {
       double x = Math.random() * getWidth() - width;
       double y = Math.random() * getHeight() - height;
       Rectangle2D r = new Rectangle2D.Double(x, y, width, height);
-      rTree = rTree.add(splitterContext, "N" + count++, r);
+      rTree = RTree.add(rTree, splitterContext, "N" + count++, r);
       checkBounds(rTree);
       //      repaint();
     }
@@ -161,7 +179,7 @@ public class RTreeVisualizer extends JPanel {
       Rectangle2D r = new Rectangle2D.Double(x, y, width, height);
       list.add(new AbstractMap.SimpleEntry("N" + count++, r));
     }
-    rTree = RTree.bulkAdd(splitterContext, rTree, list);
+    rTree = RTree.bulkAdd(rTree, splitterContext, list);
     checkBounds(rTree);
     repaint();
   }
@@ -171,7 +189,7 @@ public class RTreeVisualizer extends JPanel {
     double height = 10;
     Rectangle2D r =
         new Rectangle2D.Double(p.getX() - width / 2, p.getY() - height / 2, width, height);
-    rTree = rTree.add(splitterContext, "N" + count++, r);
+    rTree = RTree.add(rTree, splitterContext, "N" + count++, r);
     log.trace("after adding {} at {}, rtree:{}", "N" + (count - 1), p, rTree);
     checkBounds(rTree);
     repaint();

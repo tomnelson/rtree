@@ -60,13 +60,13 @@ public class RTreeTest2 {
   public void testOne() {
 
     RTree<String> rTree = RTree.create();
-    rTree = rTree.add(splitterContext, "A", new Rectangle2D.Double(3, 3, 200, 100));
-    rTree = rTree.add(splitterContext, "B", new Rectangle2D.Double(400, 300, 100, 100));
-    rTree = rTree.add(splitterContext, "C", new Rectangle2D.Double(200, 300, 100, 100));
+    rTree = RTree.add(rTree, splitterContext, "A", new Rectangle2D.Double(3, 3, 200, 100));
+    rTree = RTree.add(rTree, splitterContext, "B", new Rectangle2D.Double(400, 300, 100, 100));
+    rTree = RTree.add(rTree, splitterContext, "C", new Rectangle2D.Double(200, 300, 100, 100));
 
-    rTree = rTree.add(splitterContext, "D", new Rectangle2D.Double(400, 120, 100, 100));
-    rTree = rTree.add(splitterContext, "E", new Rectangle2D.Double(20, 500, 10, 100));
-    rTree = rTree.add(splitterContext, "F", new Rectangle2D.Double(5, 40, 100, 100));
+    rTree = RTree.add(rTree, splitterContext, "D", new Rectangle2D.Double(400, 120, 100, 100));
+    rTree = RTree.add(rTree, splitterContext, "E", new Rectangle2D.Double(20, 500, 10, 100));
+    rTree = RTree.add(rTree, splitterContext, "F", new Rectangle2D.Double(5, 40, 100, 100));
     log.info("tree {} initial size is {}", rTree, rTree.count());
     for (int i = 0; i < 100; i++) {
       double x = Math.random() * 500;
@@ -74,7 +74,7 @@ public class RTreeTest2 {
       double width = Math.random() * 50 + 50;
       double height = Math.random() * 50 + 50;
       Rectangle2D r = new Rectangle2D.Double(x, y, width, height);
-      rTree = rTree.add(splitterContext, "N" + i, r);
+      rTree = RTree.add(rTree, splitterContext, "N" + i, r);
       log.trace("tree:" + rTree);
     }
     log.trace("root:{}");
@@ -84,7 +84,7 @@ public class RTreeTest2 {
 
     for (int i = 0; i < 100; i++) {
       String element = "N" + i;
-      rTree = rTree.remove(element);
+      rTree = rTree.remove(rTree, element);
       log.trace("tree size:{}", rTree.count());
     }
     log.info(
@@ -95,7 +95,7 @@ public class RTreeTest2 {
 
   @Test
   public void testAddOne() {
-    rTree = rTree.add(splitterContext, "A", r1);
+    rTree = RTree.add(rTree, splitterContext, "A", r1);
     //    Assert.assertTrue(rTree.level == 0);
     Assert.assertTrue(rTree.getRoot().isPresent());
     Node<String> root = rTree.getRoot().get();
@@ -107,84 +107,84 @@ public class RTreeTest2 {
 
   @Test
   public void testAddTwo() {
-    rTree = rTree.add(splitterContext, "A", r1);
-    rTree = rTree.add(splitterContext, "B", r2);
+    rTree = RTree.add(rTree, splitterContext, "A", r1);
+    rTree = RTree.add(rTree, splitterContext, "B", r2);
 
     testAreas(rTree);
   }
 
   @Test
   public void testAddThree() {
-    rTree = rTree.add(splitterContext, "A", r1);
-    rTree = rTree.add(splitterContext, "B", r2);
-    rTree = rTree.add(splitterContext, "C", r3);
+    rTree = RTree.add(rTree, splitterContext, "A", r1);
+    rTree = RTree.add(rTree, splitterContext, "B", r2);
+    rTree = RTree.add(rTree, splitterContext, "C", r3);
 
     testAreas(rTree);
   }
 
   @Test
   public void testAddFour() {
-    rTree = rTree.add(splitterContext, "A", r1);
-    rTree = rTree.add(splitterContext, "B", r2);
-    rTree = rTree.add(splitterContext, "C", r3);
-    rTree = rTree.add(splitterContext, "D", r4);
+    rTree = RTree.add(rTree, splitterContext, "A", r1);
+    rTree = RTree.add(rTree, splitterContext, "B", r2);
+    rTree = RTree.add(rTree, splitterContext, "C", r3);
+    rTree = RTree.add(rTree, splitterContext, "D", r4);
 
     testAreas(rTree);
   }
 
   @Test
   public void testAddFive() {
-    rTree = rTree.add(splitterContext, "A", r1);
-    rTree = rTree.add(splitterContext, "B", r2);
-    rTree = rTree.add(splitterContext, "C", r3);
-    rTree = rTree.add(splitterContext, "D", r4);
-    rTree = rTree.add(splitterContext, "E", r5);
+    rTree = RTree.add(rTree, splitterContext, "A", r1);
+    rTree = RTree.add(rTree, splitterContext, "B", r2);
+    rTree = RTree.add(rTree, splitterContext, "C", r3);
+    rTree = RTree.add(rTree, splitterContext, "D", r4);
+    rTree = RTree.add(rTree, splitterContext, "E", r5);
 
     testAreas(rTree);
   }
 
   @Test
   public void testAddSix() {
-    rTree = rTree.add(splitterContext, "A", r1);
-    rTree = rTree.add(splitterContext, "B", r2);
-    rTree = rTree.add(splitterContext, "C", r3);
-    rTree = rTree.add(splitterContext, "D", r4);
-    rTree = rTree.add(splitterContext, "E", r5);
-    rTree = rTree.add(splitterContext, "F", r6);
+    rTree = RTree.add(rTree, splitterContext, "A", r1);
+    rTree = RTree.add(rTree, splitterContext, "B", r2);
+    rTree = RTree.add(rTree, splitterContext, "C", r3);
+    rTree = RTree.add(rTree, splitterContext, "D", r4);
+    rTree = RTree.add(rTree, splitterContext, "E", r5);
+    rTree = RTree.add(rTree, splitterContext, "F", r6);
 
     testAreas(rTree);
   }
 
   @Test
   public void testAddSeven() {
-    rTree = rTree.add(splitterContext, "A", r1);
-    rTree = rTree.add(splitterContext, "B", r2);
-    rTree = rTree.add(splitterContext, "C", r3);
-    rTree = rTree.add(splitterContext, "D", r4);
-    rTree = rTree.add(splitterContext, "E", r5);
-    rTree = rTree.add(splitterContext, "F", r6);
-    rTree = rTree.add(splitterContext, "G", r7);
+    rTree = RTree.add(rTree, splitterContext, "A", r1);
+    rTree = RTree.add(rTree, splitterContext, "B", r2);
+    rTree = RTree.add(rTree, splitterContext, "C", r3);
+    rTree = RTree.add(rTree, splitterContext, "D", r4);
+    rTree = RTree.add(rTree, splitterContext, "E", r5);
+    rTree = RTree.add(rTree, splitterContext, "F", r6);
+    rTree = RTree.add(rTree, splitterContext, "G", r7);
 
     testAreas(rTree);
   }
 
   @Test
   public void testAddEight() {
-    rTree = rTree.add(splitterContext, "A", r1);
+    rTree = RTree.add(rTree, splitterContext, "A", r1);
     log.trace("rtree:{}", rTree);
-    rTree = rTree.add(splitterContext, "B", r2);
+    rTree = RTree.add(rTree, splitterContext, "B", r2);
     log.trace("rtree:{}", rTree);
-    rTree = rTree.add(splitterContext, "C", r3);
+    rTree = RTree.add(rTree, splitterContext, "C", r3);
     log.trace("rtree:{}", rTree);
-    rTree = rTree.add(splitterContext, "D", r4);
+    rTree = RTree.add(rTree, splitterContext, "D", r4);
     log.trace("rtree:{}", rTree);
-    rTree = rTree.add(splitterContext, "E", r5);
+    rTree = RTree.add(rTree, splitterContext, "E", r5);
     log.trace("rtree:{}", rTree);
-    rTree = rTree.add(splitterContext, "F", r6);
+    rTree = RTree.add(rTree, splitterContext, "F", r6);
     log.trace("rtree:{}", rTree);
-    rTree = rTree.add(splitterContext, "G", r7);
+    rTree = RTree.add(rTree, splitterContext, "G", r7);
     log.trace("rtree:{}", rTree);
-    rTree = rTree.add(splitterContext, "H", r8);
+    rTree = RTree.add(rTree, splitterContext, "H", r8);
     log.trace("rtree:{}", rTree);
 
     testAreas(rTree);
@@ -192,13 +192,13 @@ public class RTreeTest2 {
 
   @Test
   public void testFindingElementsByLocation() {
-    rTree = rTree.add(splitterContext, "A", r1);
-    rTree = rTree.add(splitterContext, "B", r2);
-    rTree = rTree.add(splitterContext, "C", r3);
-    rTree = rTree.add(splitterContext, "D", r4);
-    rTree = rTree.add(splitterContext, "F", r5);
-    rTree = rTree.add(splitterContext, "G", r6);
-    rTree = rTree.add(splitterContext, "H", r7);
+    rTree = RTree.add(rTree, splitterContext, "A", r1);
+    rTree = RTree.add(rTree, splitterContext, "B", r2);
+    rTree = RTree.add(rTree, splitterContext, "C", r3);
+    rTree = RTree.add(rTree, splitterContext, "D", r4);
+    rTree = RTree.add(rTree, splitterContext, "F", r5);
+    rTree = RTree.add(rTree, splitterContext, "G", r6);
+    rTree = RTree.add(rTree, splitterContext, "H", r7);
 
     Point2D p = new Point2D.Double(r4.getX() + r4.getWidth() / 2, r4.getY() + r4.getHeight() / 2);
     Object found = rTree.getPickedObject(p);
