@@ -135,17 +135,6 @@ public class RTree<T> {
     return rtree;
   }
 
-  private static Point2D centerOfGravity(Collection<Rectangle2D> rectangles) {
-    int count = rectangles.size();
-    double xSum = 0;
-    double ySum = 0;
-    for (Rectangle2D r : rectangles) {
-      xSum += r.getCenterX();
-      ySum += r.getCenterY();
-    }
-    return new Point2D.Double(xSum / count, ySum / count);
-  }
-
   public static <T> RTree removeForReinsert(
       RTree<T> rtree, Collection<Map.Entry<T, Rectangle2D>> removed) {
     if (!rtree.root.isPresent()) return rtree;
@@ -167,7 +156,7 @@ public class RTree<T> {
         List<Map.Entry<T, Rectangle2D>> entryList = new ArrayList<>();
         // will be sorted at the end
         entryList.addAll(nodeMap.entrySet());
-        entryList.sort(new DistanceComparator(RTree.centerOfGravity(nodeMap.values())));
+        entryList.sort(new DistanceComparator(leafNode.centerOfGravity()));
 
         // now take 30% from the beginning of the sortedList, remove them all from the tree, then re-insert them all
 

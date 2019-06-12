@@ -39,6 +39,8 @@ public interface Node<T> extends TreeNode, Bounded {
 
   int count();
 
+  Point2D centerOfGravity();
+
   Set<LeafNode<T>> getContainingLeafs(Set<LeafNode<T>> containingLeafs, double x, double y);
 
   Set<LeafNode<T>> getContainingLeafs(Set<LeafNode<T>> containingLeafs, Point2D p);

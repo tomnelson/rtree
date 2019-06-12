@@ -77,6 +77,17 @@ public class LeafNode<T> extends RTreeNode<T> implements Node<T> {
   /** create an empty LeafNode; */
   private LeafNode() {}
 
+  public Point2D centerOfGravity() {
+    int count = map.size();
+    double xSum = 0;
+    double ySum = 0;
+    for (Rectangle2D r : map.values()) {
+      xSum += r.getCenterX();
+      ySum += r.getCenterY();
+    }
+    return new Point2D.Double(xSum / count, ySum / count);
+  }
+
   /**
    * @param splitterContext how to split on overflow (R-Tree or R*-Tree)
    * @param entries add to this LeafNode

@@ -126,6 +126,18 @@ public class InnerNode<T> extends RTreeNode<T> implements Node<T> {
     return bounds.orElse(new Rectangle2D.Double());
   }
 
+  public Point2D centerOfGravity() {
+    int count = children.size();
+    double xSum = 0;
+    double ySum = 0;
+    for (Node<T> child : children) {
+      Rectangle2D r = child.getBounds();
+      xSum += r.getCenterX();
+      ySum += r.getCenterY();
+    }
+    return new Point2D.Double(xSum / count, ySum / count);
+  }
+
   /**
    * recompute the bounding box for this InnerNode, then the recompute for parent node Climbs the
    * tree to the root as it recalcultes. This i required when a leaf node is removed.
