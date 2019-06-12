@@ -10,6 +10,8 @@ import com.tom.rtree.RTree;
 import com.tom.rtree.SplitterContext;
 import com.tom.rtree.TreeNode;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -102,12 +104,28 @@ public class RTreeVisualizer extends JPanel {
     JButton samePoint = new JButton("Add Same");
     samePoint.addActionListener(e -> addShapeAt(new Point2D.Double(200, 200)));
 
+
     JButton reinsert = new JButton("Re-insert");
-    reinsert.addActionListener(
-        e -> {
-          rTree = RTree.<Object>reinsert(rTree, splitterContext);
-          repaint();
+    final Collection<Map.Entry<Object, Rectangle2D>> removed = new ArrayList<>();
+
+    reinsert.addActionListener(new ActionListener(){
+      public void actionPerformed(ActionEvent e) {
+        SwingUtilities.invokeLater(new Runnable() {
+          public void run() {
+            removed.clear();
+            rTree = RTree.removeForReinsert(rTree, splitterContext, removed);
+            repaint();
+
+          }
         });
+      }});
+    JButton reinsertAdd = new JButton("Reinsert Add");
+    reinsertAdd.addActionListener(e ->
+            rTree = rTree.add(splitterContext, removed);
+    )
+
+
+
     JButton clear = new JButton("clear");
     clear.addActionListener(
         e -> {
@@ -146,26 +164,25 @@ public class RTreeVisualizer extends JPanel {
       Rectangle2D r = new Rectangle2D.Double(x, y, width, height);
       rTree = rTree.add(splitterContext, "N" + count++, r);
       checkBounds(rTree);
-//      repaint();
+      //      repaint();
     }
     repaint();
   }
 
   private void bulkInsertMany() {
-    java.util.List<Map.Entry<Object,Rectangle2D>> list = new ArrayList<>();
-    for (int i = 0; i < 100; i++) {
+    java.util.List<Map.Entry<Object, Rectangle2D>> list = new ArrayList<>();
+    for (int i = 0; i < 50; i++) {
       double width = 4;
       double height = 4;
       double x = Math.random() * getWidth() - width;
       double y = Math.random() * getHeight() - height;
       Rectangle2D r = new Rectangle2D.Double(x, y, width, height);
-      list.add(new AbstractMap.SimpleEntry("N"+count++, r));
+      list.add(new AbstractMap.SimpleEntry("N" + count++, r));
     }
     rTree = RTree.bulkAdd(splitterContext, rTree, list);
     checkBounds(rTree);
     repaint();
   }
-
 
   private void addShapeAt(Point2D p) {
     double width = 10;

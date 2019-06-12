@@ -14,6 +14,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -66,6 +68,13 @@ public class RTree<T> {
     return new RTree();
   }
 
+  public RTree<T> add(SplitterContext<T> splitterContext, Map.Entry<T, Rectangle2D> entry) {
+    return add(splitterContext, entry.getKey(), entry.getValue());
+  }
+
+//  public RTree<T> addAll(RTree<T> rtree, SplitterContext<T> splitterContext, Collection<Map.Entry<T, Rectangle2D>> entries) {
+//
+//  }
   /**
    * add one element to the RTree
    *
@@ -119,6 +128,77 @@ public class RTree<T> {
     return rtree;
   }
 
+  private static Point2D centerOfGravity(Collection<Rectangle2D> rectangles) {
+    int count = rectangles.size();
+    double xSum = 0;
+    double ySum = 0;
+    for (Rectangle2D r : rectangles) {
+      xSum += r.getCenterX();
+      ySum += r.getCenterY();
+    }
+    return new Point2D.Double(xSum / count, ySum / count);
+  }
+
+  public static <T> RTree removeForReinsert(RTree<T> rtree, SplitterContext<T> splitterContext, Collection<Map.Entry<T, Rectangle2D>> removed) {
+    if (!rtree.root.isPresent()) return rtree;
+    Node<T> root = rtree.root.get();
+    log.debug(
+            "average leaf count {}", rtree.averageLeafCount(root, new double[] {0}, new int[] {0}));
+
+    // find all nodes that have leaf children
+    List<LeafNode> leafNodes = rtree.collectLeafNodes(root, new ArrayList<>());
+    // are there dupes?
+    Set<LeafNode> leafNodeSet = new HashSet<>(leafNodes);
+    // for each leaf node, sort the children max to min, according to how far they are from the center
+    List<Map.Entry<T, Rectangle2D>> goners = new ArrayList<>();
+    int averageSize = (int) rtree.averageLeafCount(root, new double[] {0}, new int[] {0});
+
+    for (TreeNode node : leafNodes) {
+      if (node instanceof LeafNode) {
+        //        Rectangle2D boundsOfLeafNode = node.getBounds();
+        //        Point2D centerOfLeafNode =
+        //            new Point2D.Double(boundsOfLeafNode.getCenterX(), boundsOfLeafNode.getCenterY());
+        LeafNode leafNode = (LeafNode) node;
+        NodeMap<T> nodeMap = leafNode.map;
+        List<Map.Entry<T, Rectangle2D>> entryList = new ArrayList<>();
+        // will be sorted at the end
+        entryList.addAll(nodeMap.entrySet());
+        entryList.sort(new DistanceComparator(RTree.centerOfGravity(nodeMap.values())));
+
+        // now take 30% from the beginning of the sortedList, remove them all from the tree, then re-insert them all
+
+        int size = entryList.size();
+        if (size >= averageSize) {
+          size *= 0.3;
+        }
+        for (int i = 0; i < size; i++) {
+          Map.Entry<T, Rectangle2D> entry = entryList.get(i);
+          goners.add(entry);
+        }
+      }
+    }
+    for (Map.Entry<T, Rectangle2D> goner : goners) {
+      rtree = rtree.remove(goner.getKey());
+      log.trace("removed one, tree size now {}", rtree.count());
+    }
+    removed.addAll(goners);
+//    log.info("removed {} goners", goners.size());
+//    log.debug("removed goners, tree size is {}", rtree.count());
+//    for (Map.Entry<T, Rectangle2D> goner : goners) {
+//      rtree = rtree.add(splitterContext, goner.getKey(), goner.getValue());
+//    }
+//    log.info("after adding back {} goners, rtree size is {}", goners.size(), rtree.count());
+    return rtree;
+
+  }
+
+  public static <T> RTree reinsert(RTree<T> rtree, SplitterContext<T> splitterContext, Collection<Map.Entry<T, Rectangle2D>> addThese) {
+    for (Map.Entry<T, Rectangle2D> entry : addThese) {
+      rtree = rtree.add(splitterContext, entry);
+    }
+    return rtree;
+  }
+
   public static <T> RTree reinsert(RTree<T> rtree, SplitterContext<T> splitterContext) {
 
     if (!rtree.root.isPresent()) return rtree;
@@ -136,16 +216,15 @@ public class RTree<T> {
 
     for (TreeNode node : leafNodes) {
       if (node instanceof LeafNode) {
-        Rectangle2D boundsOfLeafNode = node.getBounds();
-        Point2D centerOfLeafNode =
-            new Point2D.Double(boundsOfLeafNode.getCenterX(), boundsOfLeafNode.getCenterY());
+        //        Rectangle2D boundsOfLeafNode = node.getBounds();
+        //        Point2D centerOfLeafNode =
+        //            new Point2D.Double(boundsOfLeafNode.getCenterX(), boundsOfLeafNode.getCenterY());
         LeafNode leafNode = (LeafNode) node;
         NodeMap<T> nodeMap = leafNode.map;
         List<Map.Entry<T, Rectangle2D>> entryList = new ArrayList<>();
-        for (Map.Entry<T, Rectangle2D> entry : nodeMap.entrySet()) {
-          entryList.add(entry); // will be sorted at the end
-        }
-        entryList.sort(new DistanceComparator(centerOfLeafNode));
+        // will be sorted at the end
+        entryList.addAll(nodeMap.entrySet());
+        entryList.sort(new DistanceComparator(RTree.centerOfGravity(nodeMap.values())));
 
         // now take 30% from the beginning of the sortedList, remove them all from the tree, then re-insert them all
 
