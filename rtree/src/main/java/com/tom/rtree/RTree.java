@@ -82,7 +82,7 @@ public class RTree<T> {
   }
 
   /**
-   * add one element to the RTree
+   * add one element to the RTree. Adding to the tree can result in a new
    *
    * @param splitterContext the R*Tree or R-Tree rules
    * @param element to add to the tree
@@ -139,7 +139,7 @@ public class RTree<T> {
       RTree<T> rtree, Collection<Map.Entry<T, Rectangle2D>> removed) {
     if (!rtree.root.isPresent()) return rtree;
     Node<T> root = rtree.root.get();
-    log.debug(
+    log.trace(
         "average leaf count {}", rtree.averageLeafCount(root, new double[] {0}, new int[] {0}));
 
     // find all nodes that have leaf children
@@ -182,7 +182,7 @@ public class RTree<T> {
 
     if (!rtree.root.isPresent()) return rtree;
     Node<T> root = rtree.root.get();
-    log.debug(
+    log.trace(
         "average leaf count {}", rtree.averageLeafCount(root, new double[] {0}, new int[] {0}));
 
     // find all nodes that have leaf children
@@ -222,12 +222,12 @@ public class RTree<T> {
       rtree = RTree.remove(rtree, goner.getKey());
       log.trace("removed one, tree size now {}", rtree.count());
     }
-    log.info("removed {} goners", goners.size());
-    log.debug("removed goners, tree size is {}", rtree.count());
+    log.trace("removed {} goners", goners.size());
+    log.trace("removed goners, tree size is {}", rtree.count());
     for (Map.Entry<T, Rectangle2D> goner : goners) {
       rtree = RTree.add(rtree, splitterContext, goner.getKey(), goner.getValue());
     }
-    log.info("after adding back {} goners, rtree size is {}", goners.size(), rtree.count());
+    log.trace("after adding back {} goners, rtree size is {}", goners.size(), rtree.count());
     return rtree;
   }
 
@@ -244,9 +244,9 @@ public class RTree<T> {
           new Point2D.Double(o1.getValue().getCenterX(), o1.getValue().getCenterY());
       Point2D centerOfO2 =
           new Point2D.Double(o2.getValue().getCenterX(), o2.getValue().getCenterY());
-      if (center.distance(centerOfO1) > center.distance(centerOfO2)) {
+      if (center.distanceSq(centerOfO1) > center.distanceSq(centerOfO2)) {
         return -1;
-      } else if (center.distance(centerOfO1) < center.distance(centerOfO2)) {
+      } else if (center.distanceSq(centerOfO1) < center.distanceSq(centerOfO2)) {
         return 1;
       } else {
         return 0;

@@ -165,7 +165,7 @@ public class InnerNode<T> extends RTreeNode<T> implements Node<T> {
   public T getPickedObject(Point2D p) {
     T picked = null;
     if (getBounds().contains(p)) {
-      log.debug("{} does contain {}", this, p);
+      log.trace("{} does contain {}", this, p);
       int size = children.size();
       for (int i = 0; i < size; i++) {
         picked = children.get(i).getPickedObject(p);
@@ -174,7 +174,7 @@ public class InnerNode<T> extends RTreeNode<T> implements Node<T> {
         }
       }
     } else {
-      log.debug("{} does not contain {}", this, p);
+      log.trace("{} does not contain {}", this, p);
     }
     return picked;
   }
@@ -342,7 +342,7 @@ public class InnerNode<T> extends RTreeNode<T> implements Node<T> {
     log.trace("remove {} from {}", element, containingLeaf);
     Node<T> goner = containingLeaf.remove(element);
     if (this.getChildren().isEmpty()) {
-      log.debug("removed the last node, should remove this from parent now");
+      log.trace("removed the last node, should remove this from parent now");
       Optional<Node<T>> parentOptional = getParent();
       if (parentOptional.isPresent()) {
         ((InnerNode) parentOptional.get()).removeNode(this);

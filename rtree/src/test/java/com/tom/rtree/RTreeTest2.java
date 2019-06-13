@@ -5,8 +5,13 @@ import static com.google.common.truth.Truth.assertThat;
 import com.google.common.collect.Maps;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.stream.Collectors;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -238,5 +243,22 @@ public class RTreeTest2 {
     for (TreeNode rt : rootNode.getChildren()) {
       testAreas(rt);
     }
+  }
+
+  private void stuff() {
+    Collection<String> strings = new HashSet<>();
+    strings.add("1");
+    List<String> list = strings.stream().collect(Collectors.toList());
+
+    List<Map.Entry<String, String>> entryList =
+        new HashMap<String, String>().entrySet().stream().collect(Collectors.toList());
+
+    List<String> valueList =
+        new HashMap<String, String>()
+            .values()
+            .stream()
+            .map(String::toUpperCase)
+            .collect(Collectors.toList());
+    valueList.replaceAll(String::toLowerCase);
   }
 }
