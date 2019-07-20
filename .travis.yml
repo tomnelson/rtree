@@ -1,8 +1,33 @@
+sudo: false
+
 language: java
+
+dist: trusty
+
 jdk:
-  - oraclejdk11
-  - openjdk11
+- oraclejdk11
+- openjdk11
 
 install:
-  - mvn -v
-  - mvn -B install -U -DskipTests=true
+- mvn -v
+- mvn -B install -U -DskipTests=true
+
+after_success:
+  - tools/deploy_snapshots.sh
+
+cache:
+  directories:
+  - ${HOME}/.m2
+
+branches:
+  only:
+    - master
+
+env:
+  global:
+  - secure: kAm95tPCQQ5I53ftbBanSCmodpjhPXMbqpdwUJ4em/UKFXiQAUegWjOHRMJRnxwTMhxHalR5r+iAr2vZ/fBWi691nlyi5q48Sn0lCIz48fjtZdO+DR5w45e9FH24MeQeTiV5ypdAG7W9WsbbVnNgIk/s0tgHEG4uEKxPlzThdvB7rWWZE8ZBF0+qH2sRtaOgOKv2cykvUoPX5GPXaE41cEshzX0uAQSjc34/T6Eq1prfpj0TIRTfKAGiW5F8Z1/D5KgOjKEnul7p0s1PtZ5E/O7jz6E38SMzOSsdDTNpsit4D75/vxyCut0klvuxsulCgdUyTMifM2otVBvzu6jSCtSZJUK1sQh4Mcv1jOxLi96KhQ0j41hoAuAPzRDG3ayRLMnZVrByWjUHig5UOE7wFyOBSvQvRb+ElnGkZV0ZjBJprQ4icjhWMVzBtdNSiKHAk81tfCXpfs5MAp43J+I5+SrsRpOEGCZf7fTz5Mxt7iQbLoxd7tnavRgWge39qmnpPhqYO5CtcqluUQJLlDj2OgeMoA3A1AGBFvDJTxUaZnPA911kInhontiMY8EY88VVk/kAv6y2+0x1qaqD3a0qnIda0G4b6QvMIuuwZWKiY5I0d3xKIZ/jJEFoKB64sQN7r7WV6mt+EYzqKhJn5gFi6vw8IlXpWPWquYQuuyMLt+I=
+  - secure: NTnrxT84rT6+7U332fXfm1BWuRdT9KwDgFG31Slq5/HHmlqFeBbQIYvjuNYvZ9nznx7IxqF8k6OPqrcGj0WT6mzca+l6iKSPxmWIc8BopOltYEsn9sXzz7Uh66K1LZD5eaQXbxXIg4cL0BLUe70DMN+iEqg4qy/KOARpeN42ov6anfGuB4M0w0b2Up5i/E+H9muXHyxJ839SMlAFSEgZ/i71gEHtg4JGspaG2315zOfl/FSWpA3zN5RmhyVyUaSR+Aapzv6JqgXTDxv6YHwHbLW3jW1EoczYfZijnUlgm+4fh1VxHn2r2cCjEEM1OyUqCEdxqxb/h+DOxTmOzDXfNOz28Q9UgW+fArnuB+Ah9VhYJUrUt2WfZ/D0ipAnR7AZY/qjiR79cdL5XzFBh3rCi7YeMpZlO0fpc+qme3iK6tmSWQo18uDkUJPW+EnFl2sQScR380LiJ5WIvvQgoeL84CdkZclduiODJFXJRBzmyCvBZfoMkiOUpttxDozdcqGDGibDjRma+53HNK4VI2lP5o7a+MWgbTde/ezkJWiWLNADBbPO0bjoAsfLpdzaGtY82o6JJWn5nWu5fKWkDZb4/OU4i6xJBck6UnIFxekIfSgMVHS6tZn+eOWrACazBk1nOTmnfwkKOqgKnWTDyEyT8fz6N46ijCH8gI917uz2ttc=
+
+
+
+
