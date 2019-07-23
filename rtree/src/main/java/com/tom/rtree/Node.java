@@ -1,8 +1,5 @@
 package com.tom.rtree;
 
-import java.awt.*;
-import java.awt.geom.Point2D;
-import java.awt.geom.Rectangle2D;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -25,7 +22,7 @@ public interface Node<T> extends TreeNode, Bounded {
 
   String asString(String margin);
 
-  T getPickedObject(Point2D p);
+  T getPickedObject(Point p);
 
   int size();
 
@@ -33,17 +30,17 @@ public interface Node<T> extends TreeNode, Bounded {
 
   Optional<Node<T>> getParent();
 
-  Node<T> add(SplitterContext<T> splitterContext, T element, Rectangle2D bounds);
+  Node<T> add(SplitterContext<T> splitterContext, T element, Rectangle bounds);
 
   boolean isLeafChildren();
 
   int count();
 
-  Point2D centerOfGravity();
+  Point centerOfGravity();
 
   Set<LeafNode<T>> getContainingLeafs(Set<LeafNode<T>> containingLeafs, double x, double y);
 
-  Set<LeafNode<T>> getContainingLeafs(Set<LeafNode<T>> containingLeafs, Point2D p);
+  Set<LeafNode<T>> getContainingLeafs(Set<LeafNode<T>> containingLeafs, Point p);
 
   LeafNode<T> getContainingLeaf(T element);
 
@@ -55,28 +52,28 @@ public interface Node<T> extends TreeNode, Bounded {
 
   Set<T> getVisibleElements(Set<T> visibleElements, Shape shape);
 
-  static String asString(List<Shape> rectangles) {
+  static String asString(List<Rectangle> rectangles) {
     StringBuilder sb = new StringBuilder();
-    for (Shape r : rectangles) {
-      sb.append(asString(r.getBounds()));
+    for (Rectangle r : rectangles) {
+      sb.append(asString(r));
       sb.append("\n");
     }
     return sb.toString();
   }
 
-  static String asString(Rectangle2D r) {
+  static String asString(Rectangle r) {
     return "["
-        + (int) r.getX()
+        + (int) r.x
         + ","
-        + (int) r.getY()
+        + (int) r.y
         + ","
-        + (int) r.getWidth()
+        + (int) r.width
         + ","
-        + (int) r.getHeight()
+        + (int) r.height
         + "]";
   }
 
-  static <T> String asString(Map.Entry<T, Rectangle2D> entry) {
+  static <T> String asString(Map.Entry<T, Rectangle> entry) {
     return entry.getKey() + "->" + asString(entry.getValue());
   }
 
@@ -93,45 +90,45 @@ public interface Node<T> extends TreeNode, Bounded {
 
   String marginIncrement = "   ";
 
-  static <T> Rectangle2D entryBoundingBox(Collection<Map.Entry<T, Rectangle2D>> entries) {
-    Rectangle2D boundingBox = null;
-    for (Map.Entry<T, Rectangle2D> entry : entries) {
-      Rectangle2D rectangle = entry.getValue();
+  static <T> Rectangle entryBoundingBox(Collection<Map.Entry<T, Rectangle>> entries) {
+    Rectangle boundingBox = null;
+    for (Map.Entry<T, Rectangle> entry : entries) {
+      Rectangle rectangle = entry.getValue();
       if (boundingBox == null) {
         boundingBox = rectangle;
       } else {
-        boundingBox = boundingBox.createUnion(rectangle);
+        boundingBox = boundingBox.union(rectangle);
       }
     }
     return boundingBox;
   }
 
-  static <T> Rectangle2D nodeBoundingBox(Collection<Node<T>> nodes) {
-    Rectangle2D boundingBox = null;
+  static <T> Rectangle nodeBoundingBox(Collection<Node<T>> nodes) {
+    Rectangle boundingBox = null;
     for (Node<T> node : nodes) {
-      Rectangle2D rectangle = node.getBounds();
+      Rectangle rectangle = node.getBounds();
       if (boundingBox == null) {
         boundingBox = rectangle;
       } else {
-        boundingBox = boundingBox.createUnion(rectangle);
+        boundingBox = boundingBox.union(rectangle);
       }
     }
     return boundingBox;
   }
 
-  static Rectangle2D boundingBox(Collection<Rectangle2D> rectangles) {
-    Rectangle2D boundingBox = null;
-    for (Rectangle2D rectangle : rectangles) {
+  static Rectangle boundingBox(Collection<Rectangle> rectangles) {
+    Rectangle boundingBox = null;
+    for (Rectangle rectangle : rectangles) {
       if (boundingBox == null) {
         boundingBox = rectangle;
       } else {
-        boundingBox = boundingBox.createUnion(rectangle);
+        boundingBox = boundingBox.union(rectangle);
       }
     }
     return boundingBox;
   }
 
-  static double area(Collection<Rectangle2D> rectangles) {
+  static double area(Collection<Rectangle> rectangles) {
     return area(boundingBox(rectangles));
   }
 
@@ -139,12 +136,12 @@ public interface Node<T> extends TreeNode, Bounded {
     return area(nodeBoundingBox(nodes));
   }
 
-  static <T> double entryArea(Collection<Map.Entry<T, Rectangle2D>> entries) {
+  static <T> double entryArea(Collection<Map.Entry<T, Rectangle>> entries) {
     return area(entryBoundingBox(entries));
   }
 
   static <T> double entryArea(
-      Collection<Map.Entry<T, Rectangle2D>> left, Collection<Map.Entry<T, Rectangle2D>> right) {
+      Collection<Map.Entry<T, Rectangle>> left, Collection<Map.Entry<T, Rectangle>> right) {
     return entryArea(left) + entryArea(right);
   }
 
@@ -152,34 +149,34 @@ public interface Node<T> extends TreeNode, Bounded {
     return nodeArea(left) + nodeArea(right);
   }
 
-  static double area(Collection<Rectangle2D> left, Collection<Rectangle2D> right) {
+  static double area(Collection<Rectangle> left, Collection<Rectangle> right) {
     return area(left) + area(right);
   }
 
-  static double area(Rectangle2D r) {
-    double area = r.getWidth() * r.getHeight();
+  static double area(Rectangle r) {
+    double area = r.width * r.height;
     return area < 0 ? -area : area;
   }
 
-  static double area(Rectangle2D left, Rectangle2D right) {
+  static double area(Rectangle left, Rectangle right) {
     return area(left) + area(right);
   }
 
-  static double margin(Collection<Rectangle2D> rectangles) {
+  static double margin(Collection<Rectangle> rectangles) {
     return margin(boundingBox(rectangles));
   }
 
-  static double margin(Rectangle2D r) {
-    double width = r.getMaxX() - r.getMinX();
-    double height = r.getMaxY() - r.getMinY();
+  static double margin(Rectangle r) {
+    double width = r.maxX - r.x;
+    double height = r.maxY - r.y;
     return 2 * (width + height);
   }
 
-  static double margin(Rectangle2D left, Rectangle2D right) {
+  static double margin(Rectangle left, Rectangle right) {
     return margin(left) + margin(right);
   }
 
-  static double margin(Collection<Rectangle2D> left, Collection<Rectangle2D> right) {
+  static double margin(Collection<Rectangle> left, Collection<Rectangle> right) {
     return margin(left) + margin(right);
   }
 
@@ -188,12 +185,12 @@ public interface Node<T> extends TreeNode, Bounded {
   }
 
   static <T> double entryMargin(
-      Collection<Map.Entry<T, Rectangle2D>> left, Collection<Map.Entry<T, Rectangle2D>> right) {
+      Collection<Map.Entry<T, Rectangle>> left, Collection<Map.Entry<T, Rectangle>> right) {
     return margin(entryBoundingBox(left)) + margin(entryBoundingBox(right));
   }
 
   static <T> double entryOverlap(
-      Collection<Map.Entry<T, Rectangle2D>> left, Collection<Map.Entry<T, Rectangle2D>> right) {
+      Collection<Map.Entry<T, Rectangle>> left, Collection<Map.Entry<T, Rectangle>> right) {
     return overlap(entryBoundingBox(left), entryBoundingBox(right));
   }
 
@@ -201,21 +198,21 @@ public interface Node<T> extends TreeNode, Bounded {
     return overlap(nodeBoundingBox(left), nodeBoundingBox(right));
   }
 
-  static double overlap(Collection<Rectangle2D> left, Collection<Rectangle2D> right) {
+  static double overlap(Collection<Rectangle> left, Collection<Rectangle> right) {
     return overlap(boundingBox(left), boundingBox(right));
   }
 
-  static double overlap(Rectangle2D left, Rectangle2D right) {
-    return area(left.createIntersection(right));
+  static double overlap(Rectangle left, Rectangle right) {
+    return area(left.intersection(right));
   }
 
-  static Rectangle2D union(Collection<? extends Bounded> boundedItems) {
-    Rectangle2D union = null;
+  static Rectangle union(Collection<? extends Bounded> boundedItems) {
+    Rectangle union = null;
     for (Bounded r : boundedItems) {
       if (union == null) {
         union = r.getBounds();
       } else {
-        union = r.getBounds().createUnion(union);
+        union = r.getBounds().union(union);
       }
     }
     return union;
@@ -225,8 +222,8 @@ public interface Node<T> extends TreeNode, Bounded {
     double min = 600;
     double max = 0;
     for (Bounded b : boundedItems) {
-      min = Math.min(b.getBounds().getMinX(), min);
-      max = Math.max(b.getBounds().getMaxX(), max);
+      min = Math.min(b.getBounds().x, min);
+      max = Math.max(b.getBounds().maxX, max);
     }
     return max - min;
   }

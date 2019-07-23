@@ -1,6 +1,5 @@
 package com.tom.rtree;
 
-import java.awt.geom.Rectangle2D;
 import java.util.List;
 import java.util.Optional;
 
@@ -14,5 +13,5 @@ public interface Splitter<T> {
 
   Pair<InnerNode<T>> split(List<Node<T>> children, Node<T> newEntry);
 
-  Optional<Node<T>> chooseSubtree(InnerNode<T> nodeToSplit, T element, Rectangle2D bounds);
+  Optional<Node<T>> chooseSubtree(InnerNode<T> nodeToSplit, T element, Rectangle bounds);
 }

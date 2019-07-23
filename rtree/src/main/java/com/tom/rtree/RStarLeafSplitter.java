@@ -4,7 +4,6 @@ import static com.tom.rtree.Node.M;
 import static com.tom.rtree.Node.m;
 
 import com.google.common.collect.Lists;
-import java.awt.geom.Rectangle2D;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
@@ -22,19 +21,19 @@ import org.slf4j.LoggerFactory;
 public class RStarLeafSplitter<T> implements LeafSplitter<T> {
 
   private static final Logger log = LoggerFactory.getLogger(RStarLeafSplitter.class);
-  private final Comparator<Map.Entry<T, Rectangle2D>> horizontalEdgeComparator =
+  private final Comparator<Map.Entry<T, Rectangle>> horizontalEdgeComparator =
       new HorizontalEdgeMapEntryComparator();
-  private final Comparator<Map.Entry<T, Rectangle2D>> verticalEdgeComparator =
+  private final Comparator<Map.Entry<T, Rectangle>> verticalEdgeComparator =
       new VerticalEdgeMapEntryComparator();
 
   public Pair<LeafNode<T>> split(
-      Collection<Map.Entry<T, Rectangle2D>> entries, Map.Entry<T, Rectangle2D> newEntry) {
+      Collection<Map.Entry<T, Rectangle>> entries, Map.Entry<T, Rectangle> newEntry) {
     return chooseSplitNodes(entries, newEntry);
   }
 
   private Pair<LeafNode<T>> chooseSplitNodes(
-      Collection<Map.Entry<T, Rectangle2D>> entries, Map.Entry<T, Rectangle2D> newEntry) {
-    Pair<List<Map.Entry<T, Rectangle2D>>> pair = chooseSplit(entries, newEntry);
+      Collection<Map.Entry<T, Rectangle>> entries, Map.Entry<T, Rectangle> newEntry) {
+    Pair<List<Map.Entry<T, Rectangle>>> pair = chooseSplit(entries, newEntry);
     LeafNode<T> leafNodeLeft = LeafNode.create(pair.left);
     LeafNode<T> leafNodeRight = LeafNode.create(pair.right);
     return Pair.of(leafNodeLeft, leafNodeRight);
@@ -47,12 +46,12 @@ public class RStarLeafSplitter<T> implements LeafSplitter<T> {
    * @param newEntry
    * @return
    */
-  private Pair<List<Map.Entry<T, Rectangle2D>>> chooseSplit(
-      Collection<Map.Entry<T, Rectangle2D>> entries, Map.Entry<T, Rectangle2D> newEntry) {
+  private Pair<List<Map.Entry<T, Rectangle>>> chooseSplit(
+      Collection<Map.Entry<T, Rectangle>> entries, Map.Entry<T, Rectangle> newEntry) {
     // make 2 lists to sort
-    List<Map.Entry<T, Rectangle2D>> xAxisList = Lists.newArrayList(entries);
+    List<Map.Entry<T, Rectangle>> xAxisList = Lists.newArrayList(entries);
     xAxisList.add(newEntry);
-    List<Map.Entry<T, Rectangle2D>> yAxisList = Lists.newArrayList(entries);
+    List<Map.Entry<T, Rectangle>> yAxisList = Lists.newArrayList(entries);
     yAxisList.add(newEntry);
 
     // sort them by min value then max value
@@ -60,8 +59,8 @@ public class RStarLeafSplitter<T> implements LeafSplitter<T> {
     yAxisList.sort(verticalEdgeComparator);
 
     // create containers for the 2 lists to split
-    List<Pair<List<Map.Entry<T, Rectangle2D>>>> horizontalGroup = Lists.newArrayList();
-    List<Pair<List<Map.Entry<T, Rectangle2D>>>> verticalGroup = Lists.newArrayList();
+    List<Pair<List<Map.Entry<T, Rectangle>>>> horizontalGroup = Lists.newArrayList();
+    List<Pair<List<Map.Entry<T, Rectangle>>>> verticalGroup = Lists.newArrayList();
 
     // iterate over the lists to create collections with different midpoints
     for (int k = 0; k < M - 2 * m + 2; k++) {
@@ -72,22 +71,22 @@ public class RStarLeafSplitter<T> implements LeafSplitter<T> {
     }
     if (log.isTraceEnabled()) {
       log.trace("horizontalGroup size is {}", horizontalGroup.size());
-      for (Pair<List<Map.Entry<T, Rectangle2D>>> pair : horizontalGroup) {
+      for (Pair<List<Map.Entry<T, Rectangle>>> pair : horizontalGroup) {
         log.trace("size of pair lists are {} and {}", pair.left.size(), pair.right.size());
       }
       log.trace("verticalGroup size is {}", verticalGroup.size());
-      for (Pair<List<Map.Entry<T, Rectangle2D>>> pair : verticalGroup) {
+      for (Pair<List<Map.Entry<T, Rectangle>>> pair : verticalGroup) {
         log.trace("size of pair lists are {} and {}", pair.left.size(), pair.right.size());
       }
     }
 
     // sum up the margin values from each group
     int sumXMarginValue = 0;
-    for (Pair<List<Map.Entry<T, Rectangle2D>>> pair : horizontalGroup) {
+    for (Pair<List<Map.Entry<T, Rectangle>>> pair : horizontalGroup) {
       sumXMarginValue += Node.entryMargin(pair.left, pair.right);
     }
     int sumYMarginValue = 0;
-    for (Pair<List<Map.Entry<T, Rectangle2D>>> pair : verticalGroup) {
+    for (Pair<List<Map.Entry<T, Rectangle>>> pair : verticalGroup) {
       sumYMarginValue += Node.entryMargin(pair.left, pair.right);
     }
     // use the group (horizontal or vertical) that has the smallest margin value su
@@ -106,13 +105,13 @@ public class RStarLeafSplitter<T> implements LeafSplitter<T> {
    * @param group
    * @return
    */
-  private Pair<List<Map.Entry<T, Rectangle2D>>> chooseSplitIndex(
-      List<Pair<List<Map.Entry<T, Rectangle2D>>>> group) {
+  private Pair<List<Map.Entry<T, Rectangle>>> chooseSplitIndex(
+      List<Pair<List<Map.Entry<T, Rectangle>>>> group) {
     double minOverlap = 0;
     double minArea = 0;
-    Optional<Pair<List<Map.Entry<T, Rectangle2D>>>> winner = Optional.empty();
+    Optional<Pair<List<Map.Entry<T, Rectangle>>>> winner = Optional.empty();
     // find the Pair of lists with the min overlap or min area
-    for (Pair<List<Map.Entry<T, Rectangle2D>>> pair : group) {
+    for (Pair<List<Map.Entry<T, Rectangle>>> pair : group) {
       double nodeOverlap = Node.entryOverlap(pair.left, pair.right);
       double nodeArea = Node.entryArea(pair.left, pair.right);
       // no winner yet. first node wins by default

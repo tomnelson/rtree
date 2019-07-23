@@ -6,7 +6,6 @@ import static com.tom.rtree.Node.m;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
-import java.awt.geom.Rectangle2D;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -22,18 +21,18 @@ public class QuadraticLeafSplitter<T> implements LeafSplitter<T> {
 
   @Override
   public Pair<LeafNode<T>> split(
-      Collection<Map.Entry<T, Rectangle2D>> entries, Map.Entry<T, Rectangle2D> newEntry) {
+      Collection<Map.Entry<T, Rectangle>> entries, Map.Entry<T, Rectangle> newEntry) {
     return quadraticSplit(entries, newEntry);
   }
 
-  private Optional<Map.Entry<T, Rectangle2D>> pickNext(
-      List<Map.Entry<T, Rectangle2D>> entries, Pair<LeafNode<T>> pickedSeeds) {
+  private Optional<Map.Entry<T, Rectangle>> pickNext(
+      List<Map.Entry<T, Rectangle>> entries, Pair<LeafNode<T>> pickedSeeds) {
     double maxDifference = 0;
-    Optional<Map.Entry<T, Rectangle2D>> winner = Optional.empty();
+    Optional<Map.Entry<T, Rectangle>> winner = Optional.empty();
     entries.removeAll(pickedSeeds.left.map.entrySet());
     entries.removeAll(pickedSeeds.right.map.entrySet());
     // for each entry
-    for (Map.Entry<T, Rectangle2D> entry : entries) {
+    for (Map.Entry<T, Rectangle> entry : entries) {
       // ... that is not already in the leaf node....
       if (!pickedSeeds.left.map.containsKey(entry.getKey())
           && !pickedSeeds.right.map.containsKey(entry.getKey())) {
@@ -42,8 +41,8 @@ public class QuadraticLeafSplitter<T> implements LeafSplitter<T> {
         LeafNode<T> rightNode = pickedSeeds.right;
         double leftArea = area(leftNode.getBounds());
         double rightArea = area(rightNode.getBounds());
-        Rectangle2D leftUnion = leftNode.getBounds().createUnion(entry.getValue());
-        Rectangle2D rightUnion = rightNode.getBounds().createUnion(entry.getValue());
+        Rectangle leftUnion = leftNode.getBounds().union(entry.getValue());
+        Rectangle rightUnion = rightNode.getBounds().union(entry.getValue());
         double leftAreaIncrease = area(leftUnion) - leftArea;
         double rightAreaIncrease = area(rightUnion) - rightArea;
         double difference = leftAreaIncrease - rightAreaIncrease;
@@ -69,13 +68,13 @@ public class QuadraticLeafSplitter<T> implements LeafSplitter<T> {
    * @param entryList
    * @return
    */
-  private Pair<LeafNode<T>> pickSeeds(List<Map.Entry<T, Rectangle2D>> entryList) {
+  private Pair<LeafNode<T>> pickSeeds(List<Map.Entry<T, Rectangle>> entryList) {
     double largestArea = 0;
-    Optional<Pair<Map.Entry<T, Rectangle2D>>> winningPair = Optional.empty();
+    Optional<Pair<Map.Entry<T, Rectangle>>> winningPair = Optional.empty();
     for (int i = 0; i < entryList.size(); i++) {
       for (int j = i + 1; j < entryList.size(); j++) {
-        Pair<Map.Entry<T, Rectangle2D>> entryPair = new Pair<>(entryList.get(i), entryList.get(j));
-        Rectangle2D union = entryPair.left.getValue().createUnion(entryPair.right.getValue());
+        Pair<Map.Entry<T, Rectangle>> entryPair = new Pair<>(entryList.get(i), entryList.get(j));
+        Rectangle union = entryPair.left.getValue().union(entryPair.right.getValue());
         double area =
             Node.area(union)
                 - Node.area(entryPair.left.getValue())
@@ -89,28 +88,28 @@ public class QuadraticLeafSplitter<T> implements LeafSplitter<T> {
       }
     }
     Preconditions.checkArgument(winningPair.isPresent(), "Winning pair not found");
-    Map.Entry<T, Rectangle2D> leftEntry = winningPair.get().left;
+    Map.Entry<T, Rectangle> leftEntry = winningPair.get().left;
     LeafNode leftNode = LeafNode.create(leftEntry);
-    Map.Entry<T, Rectangle2D> rightEntry = winningPair.get().right;
+    Map.Entry<T, Rectangle> rightEntry = winningPair.get().right;
     LeafNode rightNode = LeafNode.create(rightEntry);
 
     return Pair.of(leftNode, rightNode);
   }
 
   private void distributeEntry(
-      List<Map.Entry<T, Rectangle2D>> entries, Pair<LeafNode<T>> pickedSeeds) {
+      List<Map.Entry<T, Rectangle>> entries, Pair<LeafNode<T>> pickedSeeds) {
 
-    Optional<Map.Entry<T, Rectangle2D>> nextOptional = pickNext(entries, pickedSeeds);
+    Optional<Map.Entry<T, Rectangle>> nextOptional = pickNext(entries, pickedSeeds);
     if (nextOptional.isPresent()) {
-      Map.Entry<T, Rectangle2D> next = nextOptional.get();
+      Map.Entry<T, Rectangle> next = nextOptional.get();
       // which of the picked seeds should it be added to?
-      Rectangle2D leftBounds = pickedSeeds.left.getBounds();
-      Rectangle2D rightBounds = pickedSeeds.right.getBounds();
+      Rectangle leftBounds = pickedSeeds.left.getBounds();
+      Rectangle rightBounds = pickedSeeds.right.getBounds();
       // which rectangle is enlarged the least?
       double leftArea = Node.area(leftBounds);
       double rightArea = Node.area(rightBounds);
-      double leftEnlargement = Node.area(leftBounds.createUnion(next.getValue())) - leftArea;
-      double rightEnlargement = Node.area(rightBounds.createUnion(next.getValue())) - rightArea;
+      double leftEnlargement = Node.area(leftBounds.union(next.getValue())) - leftArea;
+      double rightEnlargement = Node.area(rightBounds.union(next.getValue())) - rightArea;
       if (leftEnlargement == rightEnlargement) {
         // a tie. consider the smaller area
         if (leftArea == rightArea) {
@@ -144,10 +143,10 @@ public class QuadraticLeafSplitter<T> implements LeafSplitter<T> {
    * @return
    */
   private Pair<LeafNode<T>> quadraticSplit(
-      Collection<Map.Entry<T, Rectangle2D>> entries, Map.Entry<T, Rectangle2D> newEntry) {
+      Collection<Map.Entry<T, Rectangle>> entries, Map.Entry<T, Rectangle> newEntry) {
     // make a collection of kids from leafNode that also include the new element
     // items will be removed from the entryList as they are distributed
-    List<Map.Entry<T, Rectangle2D>> entryList = Lists.newArrayList(entries);
+    List<Map.Entry<T, Rectangle>> entryList = Lists.newArrayList(entries);
     entryList.add(newEntry);
     // get the best pair to split on from the leafNode elements
     Pair<LeafNode<T>> pickedSeeds = pickSeeds(entryList);
@@ -161,12 +160,12 @@ public class QuadraticLeafSplitter<T> implements LeafSplitter<T> {
       // take care of entries that were not distributed
       if (pickedSeeds.left.size() >= M - m + 1) {
         // left side too big, give them to the right side
-        for (Map.Entry<T, Rectangle2D> entry : entryList) {
+        for (Map.Entry<T, Rectangle> entry : entryList) {
           pickedSeeds.right.map.put(entry.getKey(), entry.getValue());
         }
       } else {
         // right side too big, give them to the left side
-        for (Map.Entry<T, Rectangle2D> entry : entryList) {
+        for (Map.Entry<T, Rectangle> entry : entryList) {
           pickedSeeds.left.map.put(entry.getKey(), entry.getValue());
         }
       }

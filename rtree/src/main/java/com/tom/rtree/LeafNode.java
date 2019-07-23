@@ -1,8 +1,5 @@
 package com.tom.rtree;
 
-import java.awt.*;
-import java.awt.geom.Point2D;
-import java.awt.geom.Rectangle2D;
 import java.util.AbstractMap;
 import java.util.Collection;
 import java.util.Collections;
@@ -28,7 +25,7 @@ public class LeafNode<T> extends RTreeNode<T> implements Node<T> {
    * @param <T> the type of the element
    * @return a newly created LeafNode that contains the passed entry as its only element
    */
-  public static <T> LeafNode<T> create(Map.Entry<T, Rectangle2D> entry) {
+  public static <T> LeafNode<T> create(Map.Entry<T, Rectangle> entry) {
     return new LeafNode(entry);
   }
 
@@ -38,7 +35,7 @@ public class LeafNode<T> extends RTreeNode<T> implements Node<T> {
    * @param <T> the type of the element
    * @return the newly created LeafNode with one child element
    */
-  public static <T> LeafNode<T> create(T element, Rectangle2D bounds) {
+  public static <T> LeafNode<T> create(T element, Rectangle bounds) {
     return new LeafNode(element, bounds);
   }
 
@@ -47,19 +44,19 @@ public class LeafNode<T> extends RTreeNode<T> implements Node<T> {
    * @param <T> the type of the elements for this LeafNode
    * @return the newly created LeadNode with the entries as children
    */
-  public static <T> LeafNode<T> create(Collection<Map.Entry<T, Rectangle2D>> entries) {
+  public static <T> LeafNode<T> create(Collection<Map.Entry<T, Rectangle>> entries) {
     return new LeafNode(entries);
   }
 
   /** @param entries child elements for the new LeafNode */
-  LeafNode(Collection<Map.Entry<T, Rectangle2D>> entries) {
-    for (Map.Entry<T, Rectangle2D> entry : entries) {
+  LeafNode(Collection<Map.Entry<T, Rectangle>> entries) {
+    for (Map.Entry<T, Rectangle> entry : entries) {
       map.put(entry.getKey(), entry.getValue());
     }
   }
 
   /** @param entry one child element for the new LeafNode */
-  LeafNode(Map.Entry<T, Rectangle2D> entry) {
+  LeafNode(Map.Entry<T, Rectangle> entry) {
     map.put(entry.getKey(), entry.getValue());
   }
 
@@ -67,7 +64,7 @@ public class LeafNode<T> extends RTreeNode<T> implements Node<T> {
    * @param element one child element for the new LeafNode
    * @param bounds bounds for the child element
    */
-  LeafNode(T element, Rectangle2D bounds) {
+  LeafNode(T element, Rectangle bounds) {
     map.put(element, bounds);
   }
 
@@ -77,15 +74,15 @@ public class LeafNode<T> extends RTreeNode<T> implements Node<T> {
   /** create an empty LeafNode; */
   private LeafNode() {}
 
-  public Point2D centerOfGravity() {
+  public Point centerOfGravity() {
     int count = map.size();
     double xSum = 0;
     double ySum = 0;
-    for (Rectangle2D r : map.values()) {
+    for (Rectangle r : map.values()) {
       xSum += r.getCenterX();
       ySum += r.getCenterY();
     }
-    return new Point2D.Double(xSum / count, ySum / count);
+    return Point.of(xSum / count, ySum / count);
   }
 
   /**
@@ -93,9 +90,9 @@ public class LeafNode<T> extends RTreeNode<T> implements Node<T> {
    * @param entries add to this LeafNode
    * @return the last node added to
    */
-  public Node<T> add(SplitterContext<T> splitterContext, Map.Entry<T, Rectangle2D>... entries) {
+  public Node<T> add(SplitterContext<T> splitterContext, Map.Entry<T, Rectangle>... entries) {
     Node<T> top = this;
-    for (Map.Entry<T, Rectangle2D> entry : entries) {
+    for (Map.Entry<T, Rectangle> entry : entries) {
       top = add(splitterContext, entry.getKey(), entry.getValue());
     }
     return top;
@@ -107,7 +104,7 @@ public class LeafNode<T> extends RTreeNode<T> implements Node<T> {
    * @param bounds the bounding box of the element
    * @return the highest node available after adding (this or parent)
    */
-  public Node<T> add(SplitterContext<T> splitterContext, T element, Rectangle2D bounds) {
+  public Node<T> add(SplitterContext<T> splitterContext, T element, Rectangle bounds) {
 
     if (size() > M) {
       // overflow. Split this node into 2
@@ -185,7 +182,7 @@ public class LeafNode<T> extends RTreeNode<T> implements Node<T> {
     return this;
   }
 
-  public Rectangle2D getBoundsFor(T element) {
+  public Rectangle getBoundsFor(T element) {
     return map.get(element);
   }
 
@@ -196,7 +193,7 @@ public class LeafNode<T> extends RTreeNode<T> implements Node<T> {
    * @param entry the entry to add to the map
    * @return the parent or this
    */
-  public Node<T> add(SplitterContext<T> splitterContext, Map.Entry<T, Rectangle2D> entry) {
+  public Node<T> add(SplitterContext<T> splitterContext, Map.Entry<T, Rectangle> entry) {
     return add(splitterContext, entry.getKey(), entry.getValue());
   }
 
@@ -243,8 +240,8 @@ public class LeafNode<T> extends RTreeNode<T> implements Node<T> {
    * @return a Collection of LeafNodes that would contain the point
    */
   @Override
-  public Set<LeafNode<T>> getContainingLeafs(Set<LeafNode<T>> containingLeafs, Point2D p) {
-    return getContainingLeafs(containingLeafs, p.getX(), p.getY());
+  public Set<LeafNode<T>> getContainingLeafs(Set<LeafNode<T>> containingLeafs, Point p) {
+    return getContainingLeafs(containingLeafs, p.x, p.y);
   }
 
   /**
@@ -269,7 +266,7 @@ public class LeafNode<T> extends RTreeNode<T> implements Node<T> {
    */
   public Collection<Shape> collectGrids(Collection<Shape> list) {
     list.add(getBounds());
-    for (Rectangle2D r : map.values()) {
+    for (Rectangle r : map.values()) {
       list.add(r);
     }
     log.trace("in leaf {}, added {} so list size now {}", this.hashCode(), map.size(), list.size());
@@ -282,7 +279,7 @@ public class LeafNode<T> extends RTreeNode<T> implements Node<T> {
    * @return the bounding box of this node
    */
   @Override
-  public Rectangle2D getBounds() {
+  public Rectangle getBounds() {
     return map.getBounds();
   }
 
@@ -291,9 +288,9 @@ public class LeafNode<T> extends RTreeNode<T> implements Node<T> {
    * @return the map entry key whose bounds value contains the passed point
    */
   @Override
-  public T getPickedObject(Point2D p) {
+  public T getPickedObject(Point p) {
     T picked = null;
-    for (Map.Entry<T, Rectangle2D> entry : map.entrySet()) {
+    for (Map.Entry<T, Rectangle> entry : map.entrySet()) {
       if (entry.getValue().contains(p)) {
         picked = entry.getKey();
         log.trace("{} contains {}", this, p);
@@ -310,7 +307,7 @@ public class LeafNode<T> extends RTreeNode<T> implements Node<T> {
   @Override
   public Set<T> getVisibleElements(Set<T> visibleElements, Shape shape) {
     if (shape.intersects(getBounds())) {
-      for (Map.Entry<T, Rectangle2D> entry : map.entrySet()) {
+      for (Map.Entry<T, Rectangle> entry : map.entrySet()) {
         if (shape.intersects(entry.getValue())) {
           visibleElements.add(entry.getKey());
         }
@@ -336,7 +333,7 @@ public class LeafNode<T> extends RTreeNode<T> implements Node<T> {
     s.append(" bounds=");
     s.append(Node.asString(this.getBounds()));
     s.append('\n');
-    for (Map.Entry<T, Rectangle2D> entry : this.map.entrySet()) {
+    for (Map.Entry<T, Rectangle> entry : this.map.entrySet()) {
       s.append(margin);
       s.append(Node.marginIncrement);
       s.append("entry=");
@@ -346,7 +343,7 @@ public class LeafNode<T> extends RTreeNode<T> implements Node<T> {
     return s.toString();
   }
 
-  private static <T> String asString(Map.Entry<T, Rectangle2D> entry) {
+  private static <T> String asString(Map.Entry<T, Rectangle> entry) {
     return entry.getKey() + "->" + Node.asString(entry.getValue());
   }
 

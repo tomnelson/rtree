@@ -1,6 +1,5 @@
 package com.tom.rtree;
 
-import java.awt.geom.Rectangle2D;
 import org.junit.Assert;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -22,7 +21,7 @@ public class RTreeTest {
     double h = 10;
     double x = Math.random() * width - w;
     double y = Math.random() * height - h;
-    Rectangle2D r = new Rectangle2D.Double(x, y, w, h);
+    Rectangle r = new Rectangle(x, y, w, h);
     rTree = RTree.add(rTree, splitterContext, "N" + count++, r);
   }
 

@@ -1,17 +1,16 @@
 package com.tom.rtree;
 
-import java.awt.geom.Rectangle2D;
 import java.util.Comparator;
 import java.util.Map;
 
 /**
- * A comparator to compare along the x-axis, Map.Entries where the values are Rectangle2D First
+ * A comparator to compare along the x-axis, Map.Entries where the values are Rectangle First
  * compare the min x values, then the max x values
  *
  * @author Tom Nelson
  * @param <T>
  */
-public class HorizontalEdgeMapEntryComparator<T> implements Comparator<Map.Entry<T, Rectangle2D>> {
+public class HorizontalEdgeMapEntryComparator<T> implements Comparator<Map.Entry<T, Rectangle>> {
   /**
    * Compares its two arguments for order. Returns a negative integer, zero, or a positive integer
    * as the first argument is less than, equal to, or greater than the second.
@@ -25,19 +24,19 @@ public class HorizontalEdgeMapEntryComparator<T> implements Comparator<Map.Entry
    * @throws ClassCastException if the arguments' types prevent them from being compared by this
    *     comparator.
    */
-  public int compare(Rectangle2D left, Rectangle2D right) {
-    if (left.getMinX() == right.getMinX()) {
-      if (left.getMaxX() == right.getMaxX()) return 0;
-      if (left.getMaxX() < right.getMaxX()) return -1;
+  public int compare(Rectangle left, Rectangle right) {
+    if (left.x == right.x) {
+      if (left.maxX == right.maxX) return 0;
+      if (left.maxX < right.maxX) return -1;
       else return 1;
     } else {
-      if (left.getMinX() < right.getMinX()) return -1;
+      if (left.x < right.x) return -1;
       return 1;
     }
   }
 
   @Override
-  public int compare(Map.Entry<T, Rectangle2D> leftNode, Map.Entry<T, Rectangle2D> rightNode) {
+  public int compare(Map.Entry<T, Rectangle> leftNode, Map.Entry<T, Rectangle> rightNode) {
     return compare(leftNode.getValue(), rightNode.getValue());
   }
 

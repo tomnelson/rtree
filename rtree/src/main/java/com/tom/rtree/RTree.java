@@ -2,9 +2,6 @@ package com.tom.rtree;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
-import java.awt.*;
-import java.awt.geom.Point2D;
-import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -69,15 +66,15 @@ public class RTree<T> {
   public static <T> RTree<T> addAll(
       RTree<T> rtree,
       SplitterContext<T> splitterContext,
-      Collection<Map.Entry<T, Rectangle2D>> entries) {
-    for (Map.Entry<T, Rectangle2D> entry : entries) {
+      Collection<Map.Entry<T, Rectangle>> entries) {
+    for (Map.Entry<T, Rectangle> entry : entries) {
       rtree = add(rtree, splitterContext, entry);
     }
     return rtree;
   }
 
   public static <T> RTree<T> add(
-      RTree<T> rtree, SplitterContext<T> splitterContext, Map.Entry<T, Rectangle2D> entry) {
+      RTree<T> rtree, SplitterContext<T> splitterContext, Map.Entry<T, Rectangle> entry) {
     return add(rtree, splitterContext, entry.getKey(), entry.getValue());
   }
 
@@ -90,7 +87,7 @@ public class RTree<T> {
    * @return a new RTree containing the added element
    */
   public static <T> RTree<T> add(
-      RTree<T> rtree, SplitterContext<T> splitterContext, T element, Rectangle2D bounds) {
+      RTree<T> rtree, SplitterContext<T> splitterContext, T element, Rectangle bounds) {
     // see if the root is not present (i.e. the RTree is empty
     if (!rtree.root.isPresent()) {
       // The first element addded to an empty RTree
@@ -124,19 +121,19 @@ public class RTree<T> {
   public static <T> RTree<T> bulkAdd(
       RTree<T> rtree,
       SplitterContext<T> splitterContext,
-      Collection<Map.Entry<T, Rectangle2D>> items) {
+      Collection<Map.Entry<T, Rectangle>> items) {
     // sort the items
-    List<Map.Entry<T, Rectangle2D>> sortedList = new ArrayList<>();
+    List<Map.Entry<T, Rectangle>> sortedList = new ArrayList<>();
     sortedList.addAll(items);
     sortedList.sort(new HorizontalCenterNodeComparator<T>());
-    for (Map.Entry<T, Rectangle2D> entry : sortedList) {
+    for (Map.Entry<T, Rectangle> entry : sortedList) {
       rtree = RTree.add(rtree, splitterContext, entry.getKey(), entry.getValue());
     }
     return rtree;
   }
 
   public static <T> RTree removeForReinsert(
-      RTree<T> rtree, Collection<Map.Entry<T, Rectangle2D>> removed) {
+      RTree<T> rtree, Collection<Map.Entry<T, Rectangle>> removed) {
     if (!rtree.root.isPresent()) return rtree;
     Node<T> root = rtree.root.get();
     log.trace(
@@ -146,14 +143,14 @@ public class RTree<T> {
     List<LeafNode> leafNodes = rtree.collectLeafNodes(root, new ArrayList<>());
     // are there dupes?
     // for each leaf node, sort the children max to min, according to how far they are from the center
-    List<Map.Entry<T, Rectangle2D>> goners = new ArrayList<>();
+    List<Map.Entry<T, Rectangle>> goners = new ArrayList<>();
     int averageSize = (int) rtree.averageLeafCount(root, new double[] {0}, new int[] {0});
 
     for (TreeNode node : leafNodes) {
       if (node instanceof LeafNode) {
         LeafNode leafNode = (LeafNode) node;
         NodeMap<T> nodeMap = leafNode.map;
-        List<Map.Entry<T, Rectangle2D>> entryList = new ArrayList<>();
+        List<Map.Entry<T, Rectangle>> entryList = new ArrayList<>();
         // will be sorted at the end
         entryList.addAll(nodeMap.entrySet());
         entryList.sort(new DistanceComparator(leafNode.centerOfGravity()));
@@ -165,12 +162,12 @@ public class RTree<T> {
           size *= 0.3;
         }
         for (int i = 0; i < size; i++) {
-          Map.Entry<T, Rectangle2D> entry = entryList.get(i);
+          Map.Entry<T, Rectangle> entry = entryList.get(i);
           goners.add(entry);
         }
       }
     }
-    for (Map.Entry<T, Rectangle2D> goner : goners) {
+    for (Map.Entry<T, Rectangle> goner : goners) {
       rtree = RTree.remove(rtree, goner.getKey());
       log.trace("removed one, tree size now {}", rtree.count());
     }
@@ -190,18 +187,18 @@ public class RTree<T> {
     // are there dupes?
     Set<LeafNode> leafNodeSet = new HashSet<>(leafNodes);
     // for each leaf node, sort the children max to min, according to how far they are from the center
-    List<Map.Entry<T, Rectangle2D>> goners = new ArrayList<>();
+    List<Map.Entry<T, Rectangle>> goners = new ArrayList<>();
     int averageSize = (int) rtree.averageLeafCount(root, new double[] {0}, new int[] {0});
 
     for (TreeNode node : leafNodes) {
       if (node instanceof LeafNode) {
-        Rectangle2D boundsOfLeafNode = node.getBounds();
-        Point2D centerOfLeafNode =
-            new Point2D.Double(boundsOfLeafNode.getCenterX(), boundsOfLeafNode.getCenterY());
+        Rectangle boundsOfLeafNode = node.getBounds();
+        Point centerOfLeafNode =
+            Point.of(boundsOfLeafNode.getCenterX(), boundsOfLeafNode.getCenterY());
         LeafNode leafNode = (LeafNode) node;
         NodeMap<T> nodeMap = leafNode.map;
-        List<Map.Entry<T, Rectangle2D>> entryList = new ArrayList<>();
-        for (Map.Entry<T, Rectangle2D> entry : nodeMap.entrySet()) {
+        List<Map.Entry<T, Rectangle>> entryList = new ArrayList<>();
+        for (Map.Entry<T, Rectangle> entry : nodeMap.entrySet()) {
           entryList.add(entry); // will be sorted at the end
         }
         entryList.sort(new DistanceComparator(centerOfLeafNode));
@@ -213,40 +210,40 @@ public class RTree<T> {
           size *= 0.3;
         }
         for (int i = 0; i < size; i++) {
-          Map.Entry<T, Rectangle2D> entry = entryList.get(i);
+          Map.Entry<T, Rectangle> entry = entryList.get(i);
           goners.add(entry);
         }
       }
     }
-    for (Map.Entry<T, Rectangle2D> goner : goners) {
+    for (Map.Entry<T, Rectangle> goner : goners) {
       rtree = RTree.remove(rtree, goner.getKey());
       log.trace("removed one, tree size now {}", rtree.count());
     }
     log.trace("removed {} goners", goners.size());
     log.trace("removed goners, tree size is {}", rtree.count());
-    for (Map.Entry<T, Rectangle2D> goner : goners) {
+    for (Map.Entry<T, Rectangle> goner : goners) {
       rtree = RTree.add(rtree, splitterContext, goner.getKey(), goner.getValue());
     }
     log.trace("after adding back {} goners, rtree size is {}", goners.size(), rtree.count());
     return rtree;
   }
 
-  static class DistanceComparator<T> implements Comparator<Map.Entry<T, Rectangle2D>> {
-    Point2D center;
+  static class DistanceComparator<T> implements Comparator<Map.Entry<T, Rectangle>> {
+    Point center;
 
-    public DistanceComparator(Point2D center) {
+    public DistanceComparator(Point center) {
       this.center = center;
     }
 
     @Override
-    public int compare(Map.Entry<T, Rectangle2D> o1, Map.Entry<T, Rectangle2D> o2) {
-      Point2D centerOfO1 =
-          new Point2D.Double(o1.getValue().getCenterX(), o1.getValue().getCenterY());
-      Point2D centerOfO2 =
-          new Point2D.Double(o2.getValue().getCenterX(), o2.getValue().getCenterY());
-      if (center.distanceSq(centerOfO1) > center.distanceSq(centerOfO2)) {
+    public int compare(Map.Entry<T, Rectangle> o1, Map.Entry<T, Rectangle> o2) {
+      Point centerOfO1 =
+          Point.of(o1.getValue().getCenterX(), o1.getValue().getCenterY());
+      Point centerOfO2 =
+          Point.of(o2.getValue().getCenterX(), o2.getValue().getCenterY());
+      if (center.distanceSquared(centerOfO1) > center.distanceSquared(centerOfO2)) {
         return -1;
-      } else if (center.distanceSq(centerOfO1) < center.distanceSq(centerOfO2)) {
+      } else if (center.distanceSquared(centerOfO1) < center.distanceSquared(centerOfO2)) {
         return 1;
       } else {
         return 0;
@@ -297,7 +294,7 @@ public class RTree<T> {
    * @param p point to search
    * @return an element that contains p or null
    */
-  public T getPickedObject(Point2D p) {
+  public T getPickedObject(Point p) {
     Node<T> root = this.root.get();
     if (root instanceof LeafNode) {
       LeafNode<T> leafNode = (LeafNode) root;
@@ -326,7 +323,7 @@ public class RTree<T> {
    * @param p the point to search
    * @return a Collection of R-Tree nodes that would contain p
    */
-  public Collection<TreeNode> getContainingLeafs(Point2D p) {
+  public Collection<TreeNode> getContainingLeafs(Point p) {
     if (root.isPresent()) {
       Node<T> theRoot = root.get();
 
@@ -363,15 +360,15 @@ public class RTree<T> {
 
   private static final String marginIncrement = "   ";
 
-  private static String asString(Rectangle2D r) {
+  private static String asString(Rectangle r) {
     return "["
-        + (int) r.getX()
+        + (int) r.x
         + ","
-        + (int) r.getY()
+        + (int) r.y
         + ","
-        + (int) r.getWidth()
+        + (int) r.width
         + ","
-        + (int) r.getHeight()
+        + (int) r.height
         + "]";
   }
 
@@ -401,9 +398,9 @@ public class RTree<T> {
     return sb.toString();
   }
 
-  private static <T> String asString(Map<T, Rectangle2D> map) {
+  private static <T> String asString(Map<T, Rectangle> map) {
     StringBuilder sb = new StringBuilder();
-    for (Map.Entry<T, Rectangle2D> entry : map.entrySet()) {
+    for (Map.Entry<T, Rectangle> entry : map.entrySet()) {
       if (sb.length() > 0) {
         sb.append('\n');
       }
@@ -412,7 +409,7 @@ public class RTree<T> {
     return sb.toString();
   }
 
-  private static <T> String asString(Map.Entry<T, Rectangle2D> entry) {
+  private static <T> String asString(Map.Entry<T, Rectangle> entry) {
     return entry.getKey() + "->" + asString(entry.getValue());
   }
 
