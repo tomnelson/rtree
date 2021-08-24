@@ -4,13 +4,8 @@ import static com.tom.rtree.Node.M;
 import static com.tom.rtree.Node.area;
 import static com.tom.rtree.Node.m;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 import java.awt.geom.Rectangle2D;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 /**
  * splits the passed entries using the quadratic method (for R-Tree)
@@ -88,7 +83,7 @@ public class QuadraticLeafSplitter<T> implements LeafSplitter<T> {
         }
       }
     }
-    Preconditions.checkArgument(winningPair.isPresent(), "Winning pair not found");
+    if (!winningPair.isPresent()) throw new RuntimeException("No winning pair returned");
     Map.Entry<T, Rectangle2D> leftEntry = winningPair.get().left;
     LeafNode leftNode = LeafNode.create(leftEntry);
     Map.Entry<T, Rectangle2D> rightEntry = winningPair.get().right;
@@ -147,7 +142,7 @@ public class QuadraticLeafSplitter<T> implements LeafSplitter<T> {
       Collection<Map.Entry<T, Rectangle2D>> entries, Map.Entry<T, Rectangle2D> newEntry) {
     // make a collection of kids from leafNode that also include the new element
     // items will be removed from the entryList as they are distributed
-    List<Map.Entry<T, Rectangle2D>> entryList = Lists.newArrayList(entries);
+    List<Map.Entry<T, Rectangle2D>> entryList = new ArrayList<>(entries);
     entryList.add(newEntry);
     // get the best pair to split on from the leafNode elements
     Pair<LeafNode<T>> pickedSeeds = pickSeeds(entryList);

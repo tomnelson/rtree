@@ -50,10 +50,10 @@ public class RTreeTest {
     for (int i = 0; i < 100; i++) {
       addRandomShape();
     }
-    Assert.assertTrue(rTree.count() == 100);
+    Assert.assertEquals(100, rTree.count());
     rTree = RTree.remove(rTree, "N0");
     log.info("rtree: {}", rTree);
-    Assert.assertTrue(rTree.count() == 99);
+    Assert.assertEquals(99, rTree.count());
   }
 
   @Test

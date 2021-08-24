@@ -1,7 +1,5 @@
 package com.tom.rtree;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Sets;
 import java.awt.*;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
@@ -51,8 +49,8 @@ public class RTree<T> {
    * @param node the node that will be the root
    */
   private RTree(Node<T> node) {
-    Preconditions.checkArgument(
-        !node.getParent().isPresent(), "Error creating R-Tree with root that has parent");
+    if (!node.getParent().isEmpty())
+      throw new RuntimeException("Error creating R-Tree with root that has parent");
     root = Optional.of(node);
   }
 
@@ -104,8 +102,8 @@ public class RTree<T> {
       LeafNode<T> leafNode = (LeafNode) node;
 
       Node<T> got = leafNode.add(splitterContext, element, bounds);
-      Preconditions.checkArgument(
-          !got.getParent().isPresent(), "return from LeafNode add has a parent");
+      if (!got.getParent().isEmpty())
+        throw new RuntimeException("return from LeafVertex add has a parent");
       return new RTree(got);
 
     } else {
@@ -115,8 +113,8 @@ public class RTree<T> {
       if (got == null) {
         log.error("add did not work");
       }
-      Preconditions.checkArgument(
-          !got.getParent().isPresent(), "return from InnerNode add has a parent");
+      if (!got.getParent().isEmpty())
+        throw new RuntimeException("return from InnerVertex add has a parent");
       return new RTree(got);
     }
   }
@@ -312,7 +310,7 @@ public class RTree<T> {
 
   /** @return a collection of rectangular bounds of the R-Tree nodes */
   public Set<Shape> getGrid() {
-    Set<Shape> areas = Sets.newHashSet();
+    Set<Shape> areas = new HashSet<>();
     if (root.isPresent()) {
       Node<T> node = root.get();
       node.collectGrids(areas);
@@ -333,7 +331,7 @@ public class RTree<T> {
       if (theRoot instanceof LeafNode) {
         return Collections.singleton(theRoot);
       } else if (theRoot instanceof InnerNode) {
-        return ((InnerNode) theRoot).getContainingLeafs(Sets.newHashSet(), p);
+        return ((InnerNode) theRoot).getContainingLeafs(new HashSet<>(), p);
       }
     }
     return Collections.emptySet();
