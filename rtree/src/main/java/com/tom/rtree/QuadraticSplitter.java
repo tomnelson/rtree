@@ -4,7 +4,6 @@ import static com.tom.rtree.Node.M;
 import static com.tom.rtree.Node.area;
 import static com.tom.rtree.Node.m;
 
-import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -55,13 +54,13 @@ public class QuadraticSplitter<T> extends AbstractSplitter<T> implements Splitte
     if (nextOptional.isPresent()) {
       Node<T> next = nextOptional.get();
       // which of the picked seeds should it be added to?
-      Rectangle2D leftBounds = pickedSeeds.left.getBounds();
-      Rectangle2D rightBounds = pickedSeeds.right.getBounds();
+      Rectangle leftBounds = pickedSeeds.left.getBounds();
+      Rectangle rightBounds = pickedSeeds.right.getBounds();
       // which rectangle is enlarged the least?
       double leftArea = area(leftBounds);
       double rightArea = area(rightBounds);
-      double leftEnlargement = area(leftBounds.createUnion(next.getBounds())) - leftArea;
-      double rightEnlargement = area(rightBounds.createUnion(next.getBounds())) - rightArea;
+      double leftEnlargement = area(leftBounds.union(next.getBounds())) - leftArea;
+      double rightEnlargement = area(rightBounds.union(next.getBounds())) - rightArea;
       if (leftEnlargement == rightEnlargement) {
         // a tie. consider the smaller area
         if (leftArea == rightArea) {
@@ -92,7 +91,7 @@ public class QuadraticSplitter<T> extends AbstractSplitter<T> implements Splitte
     for (int i = 0; i < entryList.size(); i++) {
       for (int j = i + 1; j < entryList.size(); j++) {
         Pair<Node<T>> entryPair = new Pair<>(entryList.get(i), entryList.get(j));
-        Rectangle2D union = entryPair.left.getBounds().createUnion(entryPair.right.getBounds());
+        Rectangle union = entryPair.left.getBounds().union(entryPair.right.getBounds());
         double area =
             area(union) - area(entryPair.left.getBounds()) - area(entryPair.right.getBounds());
         if (!winningPair.isPresent()) {
@@ -128,8 +127,8 @@ public class QuadraticSplitter<T> extends AbstractSplitter<T> implements Splitte
         InnerNode<T> rightNode = pickedSeeds.right;
         double leftArea = area(leftNode.getBounds());
         double rightArea = area(rightNode.getBounds());
-        Rectangle2D leftUnion = leftNode.getBounds().createUnion(entry.getBounds());
-        Rectangle2D rightUnion = rightNode.getBounds().createUnion(entry.getBounds());
+        Rectangle leftUnion = leftNode.getBounds().union(entry.getBounds());
+        Rectangle rightUnion = rightNode.getBounds().union(entry.getBounds());
         double leftAreaIncrease = area(leftUnion) - leftArea;
         double rightAreaIncrease = area(rightUnion) - rightArea;
         double difference = leftAreaIncrease - rightAreaIncrease;
@@ -148,7 +147,7 @@ public class QuadraticSplitter<T> extends AbstractSplitter<T> implements Splitte
     return winner;
   }
 
-  public Optional<Node<T>> chooseSubtree(InnerNode<T> nodeToSplit, T element, Rectangle2D bounds) {
+  public Optional<Node<T>> chooseSubtree(InnerNode<T> nodeToSplit, T element, Rectangle bounds) {
     return leastEnlargementThenAreaThenKids(nodeToSplit, bounds);
   }
 }

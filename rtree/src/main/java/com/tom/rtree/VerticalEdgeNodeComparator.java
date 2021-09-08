@@ -1,12 +1,11 @@
 package com.tom.rtree;
 
-import java.awt.geom.Rectangle2D;
 import java.util.Comparator;
 import java.util.Map;
 
 /**
- * A comparator to compare along the y-axis, Nodes where the values are Rectangle2D First compare
- * the min y values, then the max y values
+ * A comparator to compare along the y-axis, Nodes where the values are Rectangle First compare the
+ * min y values, then the max y values
  *
  * @author Tom Nelson
  * @param <T>
@@ -25,18 +24,18 @@ public class VerticalEdgeNodeComparator<T> implements Comparator<Node<T>> {
    * @throws ClassCastException if the arguments' types prevent them from being compared by this
    *     comparator.
    */
-  public int compare(Rectangle2D left, Rectangle2D right) {
-    if (left.getMinY() == right.getMinY()) {
-      if (left.getMaxY() == right.getMaxY()) return 0;
-      if (left.getMaxY() < right.getMaxY()) return -1;
+  public int compare(Rectangle left, Rectangle right) {
+    if (left.y == right.y) {
+      if (left.maxY == right.maxY) return 0;
+      if (left.maxY < right.maxY) return -1;
       else return 1;
     } else {
-      if (left.getMinY() < right.getMinY()) return -1;
+      if (left.y < right.y) return -1;
       return 1;
     }
   }
 
-  public int compare(Map.Entry<?, Rectangle2D> leftNode, Map.Entry<?, Rectangle2D> rightNode) {
+  public int compare(Map.Entry<?, Rectangle> leftNode, Map.Entry<?, Rectangle> rightNode) {
     return compare(leftNode.getValue(), rightNode.getValue());
   }
 

@@ -1,7 +1,5 @@
 package com.tom.rtree;
 
-import java.awt.geom.Rectangle2D;
-
 /**
  * Interface for items that present a bounding box rectangle
  *
@@ -14,5 +12,5 @@ public interface Bounded {
    *
    * @return
    */
-  Rectangle2D getBounds();
+  Rectangle getBounds();
 }

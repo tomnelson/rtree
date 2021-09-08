@@ -6,7 +6,6 @@ import static com.tom.rtree.Node.nodeArea;
 import static com.tom.rtree.Node.nodeMargin;
 import static com.tom.rtree.Node.nodeOverlap;
 
-import java.awt.geom.Rectangle2D;
 import java.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -99,7 +98,7 @@ public class RStarSplitter<T> extends AbstractSplitter<T> implements Splitter<T>
   }
 
   @Override
-  public Optional<Node<T>> chooseSubtree(InnerNode<T> nodeToSplit, T element, Rectangle2D bounds) {
+  public Optional<Node<T>> chooseSubtree(InnerNode<T> nodeToSplit, T element, Rectangle bounds) {
     if (nodeToSplit.isLeafChildren()) {
       return leastOverlapThenEnlargementThenAreaThenKids(nodeToSplit, bounds); //R*-Tree
     } else {

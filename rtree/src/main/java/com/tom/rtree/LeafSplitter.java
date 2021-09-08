@@ -1,6 +1,5 @@
 package com.tom.rtree;
 
-import java.awt.geom.Rectangle2D;
 import java.util.Collection;
 import java.util.Map;
 
@@ -13,5 +12,5 @@ import java.util.Map;
 public interface LeafSplitter<T> {
 
   Pair<LeafNode<T>> split(
-      Collection<Map.Entry<T, Rectangle2D>> entries, Map.Entry<T, Rectangle2D> newEntry);
+      Collection<Map.Entry<T, Rectangle>> entries, Map.Entry<T, Rectangle> newEntry);
 }

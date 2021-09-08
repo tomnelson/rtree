@@ -1,14 +1,12 @@
 package com.tom.rtree;
 
-import java.awt.geom.Rectangle2D;
-
 /**
  * @author Tom Nelson
  * @param <T>
  */
-public interface BoundedMap<T> extends java.util.Map<T, Rectangle2D> {
+public interface BoundedMap<T> extends java.util.Map<T, Rectangle> {
 
-  Rectangle2D getBounds();
+  Rectangle getBounds();
 
   void recalculateBounds();
 }

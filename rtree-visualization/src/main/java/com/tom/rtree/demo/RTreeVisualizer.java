@@ -1,14 +1,8 @@
 package com.tom.rtree.demo;
 
-import com.tom.rtree.Bounded;
-import com.tom.rtree.InnerNode;
-import com.tom.rtree.LeafNode;
-import com.tom.rtree.Node;
-import com.tom.rtree.RStarLeafSplitter;
-import com.tom.rtree.RStarSplitter;
-import com.tom.rtree.RTree;
-import com.tom.rtree.SplitterContext;
-import com.tom.rtree.TreeNode;
+import com.tom.rtree.*;
+import com.tom.rtree.Point;
+import com.tom.rtree.Rectangle;
 import java.awt.*;
 import java.awt.event.ItemEvent;
 import java.awt.event.MouseAdapter;
@@ -20,6 +14,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import javax.swing.*;
@@ -57,8 +52,8 @@ public class RTreeVisualizer extends JPanel {
     addStuff.addActionListener(e -> addRandomShape());
     JPanel drawingPane =
         new JPanel() {
-          public Dimension getPreferredSize() {
-            return new Dimension(INITIAL_WIDTH, INITIAL_HEIGHT);
+          public java.awt.Dimension getPreferredSize() {
+            return new java.awt.Dimension(INITIAL_WIDTH, INITIAL_HEIGHT);
           }
 
           @Override
@@ -66,10 +61,12 @@ public class RTreeVisualizer extends JPanel {
             super.paint(g);
             Graphics2D g2d = (Graphics2D) g;
             Color oldColor = g2d.getColor();
-            Map<Rectangle2D, Color> map = getGridInColor();
-            for (Map.Entry<Rectangle2D, Color> entry : map.entrySet()) {
+            Map<Rectangle, Color> map = getGridInColor();
+            for (Map.Entry<Rectangle, Color> entry : map.entrySet()) {
               g2d.setColor(entry.getValue());
-              g2d.draw(entry.getKey());
+              Rectangle r = entry.getKey();
+              Rectangle2D r2d = new Rectangle2D.Double(r.x, r.y, r.width, r.height);
+              g2d.draw(r2d);
             }
             g2d.setColor(oldColor);
           }
@@ -87,7 +84,7 @@ public class RTreeVisualizer extends JPanel {
             super.mouseClicked(e);
 
             if (SwingUtilities.isRightMouseButton(e)) {
-              Object o = rTree.getPickedObject(e.getPoint());
+              Object o = rTree.getPickedObject(Point.of(e.getPoint().x, e.getPoint().y));
 
               rTree = RTree.remove(rTree, o);
               log.trace("after removing {} rtree:{}", o, rTree);
@@ -102,7 +99,7 @@ public class RTreeVisualizer extends JPanel {
     JButton samePoint = new JButton("Add Same");
     samePoint.addActionListener(e -> addShapeAt(new Point2D.Double(200, 200)));
 
-    final java.util.List<Map.Entry<Object, Rectangle2D>> goners = new ArrayList<>();
+    final List<Map.Entry<Object, Rectangle>> goners = new ArrayList<>();
     JButton removeForReinsert = new JButton("Remove for re-insert");
     removeForReinsert.addActionListener(
         e -> {
@@ -150,7 +147,7 @@ public class RTreeVisualizer extends JPanel {
     double height = 10;
     double x = Math.random() * getWidth() - width;
     double y = Math.random() * getHeight() - height;
-    Rectangle2D r = new Rectangle2D.Double(x, y, width, height);
+    Rectangle r = Rectangle.of(x, y, width, height);
     rTree = RTree.add(rTree, splitterContext, "N" + count++, r);
     repaint();
   }
@@ -161,7 +158,7 @@ public class RTreeVisualizer extends JPanel {
       double height = 4;
       double x = Math.random() * getWidth() - width;
       double y = Math.random() * getHeight() - height;
-      Rectangle2D r = new Rectangle2D.Double(x, y, width, height);
+      Rectangle r = Rectangle.of(x, y, width, height);
       rTree = RTree.add(rTree, splitterContext, "N" + count++, r);
       checkBounds(rTree);
       //      repaint();
@@ -170,13 +167,13 @@ public class RTreeVisualizer extends JPanel {
   }
 
   private void bulkInsertMany() {
-    java.util.List<Map.Entry<Object, Rectangle2D>> list = new ArrayList<>();
+    java.util.List<Map.Entry<Object, Rectangle>> list = new ArrayList<>();
     for (int i = 0; i < 100; i++) {
       double width = 4;
       double height = 4;
       double x = Math.random() * getWidth() - width;
       double y = Math.random() * getHeight() - height;
-      Rectangle2D r = new Rectangle2D.Double(x, y, width, height);
+      Rectangle r = Rectangle.of(x, y, width, height);
       list.add(new AbstractMap.SimpleEntry("N" + count++, r));
     }
     rTree = RTree.bulkAdd(rTree, splitterContext, list);
@@ -187,8 +184,7 @@ public class RTreeVisualizer extends JPanel {
   private void addShapeAt(Point2D p) {
     double width = 10;
     double height = 10;
-    Rectangle2D r =
-        new Rectangle2D.Double(p.getX() - width / 2, p.getY() - height / 2, width, height);
+    Rectangle r = Rectangle.of(p.getX() - width / 2, p.getY() - height / 2, width, height);
     rTree = RTree.add(rTree, splitterContext, "N" + count++, r);
     log.trace("after adding {} at {}, rtree:{}", "N" + (count - 1), p, rTree);
     checkBounds(rTree);
@@ -199,12 +195,12 @@ public class RTreeVisualizer extends JPanel {
     checkBounds(tree.getRoot().get());
   }
 
-  private Rectangle2D getBounds(Collection<? extends Bounded> nodes) {
-    Rectangle2D bounds = null;
+  private Rectangle getBounds(Collection<? extends Bounded> nodes) {
+    Rectangle bounds = null;
     for (Bounded b : nodes) {
       if (bounds == null) bounds = b.getBounds();
       else {
-        bounds = bounds.createUnion(b.getBounds());
+        bounds = bounds.union(b.getBounds());
       }
     }
     return bounds;
@@ -232,7 +228,7 @@ public class RTreeVisualizer extends JPanel {
     f.setVisible(true);
   }
 
-  private Map<Rectangle2D, Color> getGridInColor() {
+  private Map<Rectangle, Color> getGridInColor() {
     Optional<Node<Object>> maybeRoot = rTree.getRoot();
     if (maybeRoot.isPresent()) {
       return getGridFor(maybeRoot.get());
@@ -240,8 +236,8 @@ public class RTreeVisualizer extends JPanel {
     return Collections.emptyMap();
   }
 
-  private Map<Rectangle2D, Color> getGridFor(TreeNode parent) {
-    Map<Rectangle2D, Color> map = new HashMap<>();
+  private Map<Rectangle, Color> getGridFor(TreeNode parent) {
+    Map<Rectangle, Color> map = new HashMap<>();
     if (parent instanceof LeafNode) {
       LeafNode<Object> leafParent = (LeafNode<Object>) parent;
       // get a color from the hashcode of this parent, and use that color for the parent and its children
@@ -251,8 +247,8 @@ public class RTreeVisualizer extends JPanel {
         int rgb = Integer.parseInt(lastSix, 16);
         Color color = new Color(rgb);
         map.put(parent.getBounds(), color);
-        for (Shape kidShape : leafParent.collectGrids(new ArrayList<>())) {
-          map.put(kidShape.getBounds(), color);
+        for (Rectangle kidShape : leafParent.collectGrids(new ArrayList<>())) {
+          map.put(kidShape, color);
         }
       } catch (Exception ex) {
         ex.printStackTrace();

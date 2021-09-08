@@ -3,7 +3,6 @@ package com.tom.rtree;
 import static com.tom.rtree.Node.area;
 import static com.tom.rtree.Node.overlap;
 
-import java.awt.geom.Rectangle2D;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,14 +26,14 @@ public abstract class AbstractSplitter<T> {
    * @return
    */
   protected Optional<Node<T>> leastEnlargementThenAreaThenKids(
-      InnerNode<T> nodeToSplit, Rectangle2D incoming) {
+      InnerNode<T> nodeToSplit, Rectangle incoming) {
     double leastEnlargement = Double.MAX_VALUE;
     Optional<Node<T>> winner = Optional.empty();
-    Optional<Rectangle2D> winningUnion = Optional.empty();
+    Optional<Rectangle> winningUnion = Optional.empty();
     for (Node<T> kid : nodeToSplit.getChildren()) {
-      Rectangle2D kidRectangle = kid.getBounds();
+      Rectangle kidRectangle = kid.getBounds();
       // how much does the kid enlarge when we enlarge it by incoming?
-      Rectangle2D union = kidRectangle.createUnion(incoming);
+      Rectangle union = kidRectangle.union(incoming);
       double kidArea = area(kidRectangle);
       double unionArea = area(union);
       // this should be difference between the new union with incoming and the original kid area
@@ -87,20 +86,20 @@ public abstract class AbstractSplitter<T> {
    * @return
    */
   protected Optional<Node<T>> leastOverlapThenEnlargementThenAreaThenKids(
-      InnerNode<T> nodeToSplit, Rectangle2D bounds) {
+      InnerNode<T> nodeToSplit, Rectangle bounds) {
     double leastOverlap = Double.MAX_VALUE;
     double leastEnlargement = Double.MAX_VALUE;
     Optional<Node<T>> winner = Optional.empty();
-    Optional<Rectangle2D> winningUnion = Optional.empty();
+    Optional<Rectangle> winningUnion = Optional.empty();
     String whatKind = "";
     for (Node<T> kid : nodeToSplit.getChildren()) {
-      Rectangle2D kidRectangle = kid.getBounds();
+      Rectangle kidRectangle = kid.getBounds();
 
       double overlap = overlap(kid.getBounds(), bounds);
       if (!winner.isPresent()) {
         winner = Optional.of(kid);
         leastOverlap = overlap;
-        winningUnion = Optional.of(kid.getBounds().createUnion(bounds));
+        winningUnion = Optional.of(kid.getBounds().union(bounds));
         if (log.isTraceEnabled()) {
           whatKind = "won as first";
           log.trace("won as first");
@@ -108,7 +107,7 @@ public abstract class AbstractSplitter<T> {
       } else if (overlap == leastOverlap) {
         log.trace("tie on overlap {} == {}", overlap, leastOverlap);
         // tie for overlap, consider enlargement
-        Rectangle2D union = kidRectangle.createUnion(bounds);
+        Rectangle union = kidRectangle.union(bounds);
         double kidArea = area(kidRectangle);
         double unionArea = area(union);
         // this should be difference between the new union with incoming and the original kid area

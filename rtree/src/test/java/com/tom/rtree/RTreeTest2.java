@@ -1,7 +1,5 @@
 package com.tom.rtree;
 
-import java.awt.geom.Point2D;
-import java.awt.geom.Rectangle2D;
 import java.util.*;
 import java.util.stream.Collectors;
 import org.junit.Assert;
@@ -18,27 +16,27 @@ public class RTreeTest2 {
   SplitterContext<String> splitterContext =
       SplitterContext.of(new RStarLeafSplitter(), new RStarSplitter());
   private RTree<String> rTree;
-  private Rectangle2D r1;
-  private Rectangle2D r2;
-  private Rectangle2D r3;
-  private Rectangle2D r4;
-  private Rectangle2D r5;
-  private Rectangle2D r6;
-  private Rectangle2D r7;
-  private Rectangle2D r8;
-  Map<String, Rectangle2D> linkedMap = new LinkedHashMap<>();
+  private Rectangle r1;
+  private Rectangle r2;
+  private Rectangle r3;
+  private Rectangle r4;
+  private Rectangle r5;
+  private Rectangle r6;
+  private Rectangle r7;
+  private Rectangle r8;
+  Map<String, Rectangle> linkedMap = new LinkedHashMap<>();
 
   @Before
   public void before() {
     rTree = RTree.create();
-    r1 = new Rectangle2D.Double(100, 100, 100, 100);
-    r2 = new Rectangle2D.Double(200, 200, 100, 100);
-    r3 = new Rectangle2D.Double(300, 300, 100, 100);
-    r4 = new Rectangle2D.Double(400, 400, 100, 100);
-    r5 = new Rectangle2D.Double(500, 500, 100, 100);
-    r6 = new Rectangle2D.Double(100, 300, 100, 100);
-    r7 = new Rectangle2D.Double(300, 100, 100, 100);
-    r8 = new Rectangle2D.Double(400, 100, 100, 100);
+    r1 = Rectangle.of(100, 100, 100, 100);
+    r2 = Rectangle.of(200, 200, 100, 100);
+    r3 = Rectangle.of(300, 300, 100, 100);
+    r4 = Rectangle.of(400, 400, 100, 100);
+    r5 = Rectangle.of(500, 500, 100, 100);
+    r6 = Rectangle.of(100, 300, 100, 100);
+    r7 = Rectangle.of(300, 100, 100, 100);
+    r8 = Rectangle.of(400, 100, 100, 100);
 
     Random generator = new Random(1001);
     // generate reusable random nodes
@@ -48,7 +46,7 @@ public class RTreeTest2 {
       double y = generator.nextDouble() * 500;
       double width = generator.nextDouble() * (600 - x);
       double height = generator.nextDouble() * (600 - y);
-      Rectangle2D r = new Rectangle2D.Double(x, y, width, height);
+      Rectangle r = Rectangle.of(x, y, width, height);
       linkedMap.put("N" + i, r);
     }
   }
@@ -57,20 +55,20 @@ public class RTreeTest2 {
   public void testOne() {
 
     RTree<String> rTree = RTree.create();
-    rTree = RTree.add(rTree, splitterContext, "A", new Rectangle2D.Double(3, 3, 200, 100));
-    rTree = RTree.add(rTree, splitterContext, "B", new Rectangle2D.Double(400, 300, 100, 100));
-    rTree = RTree.add(rTree, splitterContext, "C", new Rectangle2D.Double(200, 300, 100, 100));
+    rTree = RTree.add(rTree, splitterContext, "A", Rectangle.of(3, 3, 200, 100));
+    rTree = RTree.add(rTree, splitterContext, "B", Rectangle.of(400, 300, 100, 100));
+    rTree = RTree.add(rTree, splitterContext, "C", Rectangle.of(200, 300, 100, 100));
 
-    rTree = RTree.add(rTree, splitterContext, "D", new Rectangle2D.Double(400, 120, 100, 100));
-    rTree = RTree.add(rTree, splitterContext, "E", new Rectangle2D.Double(20, 500, 10, 100));
-    rTree = RTree.add(rTree, splitterContext, "F", new Rectangle2D.Double(5, 40, 100, 100));
+    rTree = RTree.add(rTree, splitterContext, "D", Rectangle.of(400, 120, 100, 100));
+    rTree = RTree.add(rTree, splitterContext, "E", Rectangle.of(20, 500, 10, 100));
+    rTree = RTree.add(rTree, splitterContext, "F", Rectangle.of(5, 40, 100, 100));
     log.info("tree {} initial size is {}", rTree, rTree.count());
     for (int i = 0; i < 100; i++) {
       double x = Math.random() * 500;
       double y = Math.random() * 500;
       double width = Math.random() * 50 + 50;
       double height = Math.random() * 50 + 50;
-      Rectangle2D r = new Rectangle2D.Double(x, y, width, height);
+      Rectangle r = Rectangle.of(x, y, width, height);
       rTree = RTree.add(rTree, splitterContext, "N" + i, r);
       log.trace("tree:" + rTree);
     }
@@ -197,15 +195,15 @@ public class RTreeTest2 {
     rTree = RTree.add(rTree, splitterContext, "G", r6);
     rTree = RTree.add(rTree, splitterContext, "H", r7);
 
-    Point2D p = new Point2D.Double(r4.getX() + r4.getWidth() / 2, r4.getY() + r4.getHeight() / 2);
+    Point p = Point.of(r4.x + r4.width / 2, r4.y + r4.height / 2);
     Object found = rTree.getPickedObject(p);
     Assert.assertEquals(found, "D");
 
-    p = new Point2D.Double(r7.getX() + r7.getWidth() / 2, r7.getY() + r7.getHeight() / 2);
+    p = Point.of(r7.x + r7.width / 2, r7.y + r7.height / 2);
     found = rTree.getPickedObject(p);
     Assert.assertEquals(found, "H");
 
-    p = new Point2D.Double(r1.getX() + r1.getWidth() / 2, r1.getY() + r1.getHeight() / 2);
+    p = Point.of(r1.x + r1.width / 2, r1.y + r1.height / 2);
     found = rTree.getPickedObject(p);
     Assert.assertEquals(found, "A");
   }
@@ -222,14 +220,14 @@ public class RTreeTest2 {
 
   private void testAreas(TreeNode rootNode) {
 
-    Rectangle2D rootBounds = rootNode.getBounds();
+    Rectangle rootBounds = rootNode.getBounds();
     if (rootNode instanceof InnerNode) {
       InnerNode innerNode = (InnerNode) rootNode;
-      Rectangle2D unionBounds = Node.union(innerNode.getChildren());
-      Assert.assertTrue(Math.abs(rootBounds.getMinX() - unionBounds.getMinX()) < 1.0E-3);
-      Assert.assertTrue(Math.abs(rootBounds.getMinY() - unionBounds.getMinY()) < 1.0E-3);
-      Assert.assertTrue(Math.abs(rootBounds.getMaxX() - unionBounds.getMaxX()) < 1.0E-3);
-      Assert.assertTrue(Math.abs(rootBounds.getMaxY() - unionBounds.getMaxY()) < 1.0E-3);
+      Rectangle unionBounds = Node.union(innerNode.getChildren());
+      Assert.assertTrue(Math.abs(rootBounds.x - unionBounds.x) < 1.0E-3);
+      Assert.assertTrue(Math.abs(rootBounds.y - unionBounds.y) < 1.0E-3);
+      Assert.assertTrue(Math.abs(rootBounds.maxX - unionBounds.maxX) < 1.0E-3);
+      Assert.assertTrue(Math.abs(rootBounds.maxY - unionBounds.maxY) < 1.0E-3);
     }
 
     for (TreeNode rt : rootNode.getChildren()) {

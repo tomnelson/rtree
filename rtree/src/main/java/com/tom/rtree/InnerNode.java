@@ -1,8 +1,5 @@
 package com.tom.rtree;
 
-import java.awt.*;
-import java.awt.geom.Point2D;
-import java.awt.geom.Rectangle2D;
 import java.util.*;
 import java.util.List;
 import org.slf4j.Logger;
@@ -17,7 +14,7 @@ public class InnerNode<T> extends RTreeNode<T> implements Node<T> {
 
   private static final Logger log = LoggerFactory.getLogger(InnerNode.class);
 
-  private Optional<Rectangle2D> bounds = Optional.empty();
+  private Optional<Rectangle> bounds = Optional.empty();
 
   /** child nodes of this InnerNode */
   private List<Node<T>> children;
@@ -118,20 +115,20 @@ public class InnerNode<T> extends RTreeNode<T> implements Node<T> {
    *     InnerNode is empty
    */
   @Override
-  public Rectangle2D getBounds() {
-    return bounds.orElse(new Rectangle2D.Double());
+  public Rectangle getBounds() {
+    return bounds.orElse(Rectangle.IDENTITY);
   }
 
-  public Point2D centerOfGravity() {
+  public Point centerOfGravity() {
     int count = children.size();
     double xSum = 0;
     double ySum = 0;
     for (Node<T> child : children) {
-      Rectangle2D r = child.getBounds();
+      Rectangle r = child.getBounds();
       xSum += r.getCenterX();
       ySum += r.getCenterY();
     }
-    return new Point2D.Double(xSum / count, ySum / count);
+    return Point.of(xSum / count, ySum / count);
   }
 
   /**
@@ -158,7 +155,7 @@ public class InnerNode<T> extends RTreeNode<T> implements Node<T> {
    * @return the element in the Leaf node that is contained by p
    */
   @Override
-  public T getPickedObject(Point2D p) {
+  public T getPickedObject(Point p) {
     T picked = null;
     if (getBounds().contains(p)) {
       log.trace("{} does contain {}", this, p);
@@ -216,7 +213,7 @@ public class InnerNode<T> extends RTreeNode<T> implements Node<T> {
    * @param element the element to look for
    * @return the LeafNode that contains the element
    */
-  LeafNode<T> getContainingLeaf(T element, Rectangle2D bounds) {
+  LeafNode<T> getContainingLeaf(T element, Rectangle bounds) {
     LeafNode<T> containingLeaf = null;
     int size = children.size();
     for (int i = 0; i < size; i++) {
@@ -236,8 +233,8 @@ public class InnerNode<T> extends RTreeNode<T> implements Node<T> {
    * @return Collection of the LeafNodes that would contain the passed point
    */
   @Override
-  public Set<LeafNode<T>> getContainingLeafs(Set<LeafNode<T>> containingLeafs, Point2D p) {
-    return getContainingLeafs(containingLeafs, p.getX(), p.getY());
+  public Set<LeafNode<T>> getContainingLeafs(Set<LeafNode<T>> containingLeafs, Point p) {
+    return getContainingLeafs(containingLeafs, p.x, p.y);
   }
 
   /**
@@ -263,7 +260,7 @@ public class InnerNode<T> extends RTreeNode<T> implements Node<T> {
    * @param list
    * @return
    */
-  public Collection<Shape> collectGrids(Collection<Shape> list) {
+  public Collection<Rectangle> collectGrids(Collection<Rectangle> list) {
     list.add(getBounds());
     int size = children.size();
     for (int i = 0; i < size; i++) {
@@ -286,13 +283,13 @@ public class InnerNode<T> extends RTreeNode<T> implements Node<T> {
     children.addAll(collection);
   }
 
-  private void updateBounds(Rectangle2D r) {
+  private void updateBounds(Rectangle r) {
     if (bounds.isPresent()) {
-      bounds = Optional.of(bounds.get().createUnion(r));
+      bounds = Optional.of(bounds.get().union(r));
     } else {
       bounds = Optional.of(r);
     }
-    Rectangle2D b = bounds.get();
+    Rectangle b = bounds.get();
   }
 
   /**
@@ -302,7 +299,7 @@ public class InnerNode<T> extends RTreeNode<T> implements Node<T> {
    * @return the returned node or its parent
    */
   @Override
-  public Node<T> add(SplitterContext<T> splitterContext, T element, Rectangle2D bounds) {
+  public Node<T> add(SplitterContext<T> splitterContext, T element, Rectangle bounds) {
     // update bounds with the new element's bounds
     updateBounds(bounds);
     Optional<Node<T>> pathToFollow = splitterContext.splitter.chooseSubtree(this, element, bounds);
@@ -440,7 +437,7 @@ public class InnerNode<T> extends RTreeNode<T> implements Node<T> {
    * @return a collection of all elements that intersect with the passed shape
    */
   @Override
-  public Set<T> getVisibleElements(Set<T> visibleElements, Shape shape) {
+  public Set<T> getVisibleElements(Set<T> visibleElements, Rectangle shape) {
     if (shape.intersects(getBounds())) {
       int size = children.size();
       for (int i = 0; i < size; i++) {

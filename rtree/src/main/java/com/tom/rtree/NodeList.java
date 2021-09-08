@@ -1,21 +1,20 @@
 package com.tom.rtree;
 
-import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.Collection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * A list of elements that are Bounded by a Rectangle2D The list is also Bounded by the combined
- * union of its elements
+ * A list of elements that are Bounded by a Rectangle The list is also Bounded by the combined union
+ * of its elements
  *
  * @author Tom Nelson
  */
 public class NodeList<B extends Bounded> extends ArrayList<B> implements BoundedList<B>, Bounded {
 
   private static final Logger log = LoggerFactory.getLogger(NodeList.class);
-  private Rectangle2D bounds;
+  private Rectangle bounds;
 
   public NodeList() {}
 
@@ -102,7 +101,7 @@ public class NodeList<B extends Bounded> extends ArrayList<B> implements Bounded
   }
 
   @Override
-  public Rectangle2D getBounds() {
+  public Rectangle getBounds() {
     return bounds;
   }
 
@@ -116,7 +115,7 @@ public class NodeList<B extends Bounded> extends ArrayList<B> implements Bounded
     if (bounds == null) {
       bounds = kid.getBounds();
     } else {
-      bounds = bounds.createUnion(kid.getBounds());
+      bounds = bounds.union(kid.getBounds());
     }
   }
   /** iterate over all children and update the bounds Called after removing from the collection */
