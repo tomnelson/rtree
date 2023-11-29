@@ -37,7 +37,7 @@
     <java.version>11</java.version>
     <junit.version>4.13.1</junit.version>
     <version.slf4j>1.7.32</version.slf4j>
-    <version.logback>1.2.10</version.logback>
+    <version.logback>1.3.12</version.logback>
     <google-java-format.version>1.3</google-java-format.version>
     <jgrapht.version>1.5.1</jgrapht.version>
     <cobertura.plugin.version>2.7</cobertura.plugin.version>
